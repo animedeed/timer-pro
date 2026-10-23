@@ -1,0 +1,30 @@
+[package]
+name = "timer_pro"
+version = "0.3.0"
+edition = "2021"
+
+[dependencies]
+# Основная библиотека GUI. Рендерер — OpenGL (glow): прозрачное окно с ним
+# проверенно работает на Windows, у wgpu по умолчанию с этим бывают проблемы.
+eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow"] }
+egui-phosphor = { version = "0.14", default-features = false, features = ["regular", "fill"] } # Иконки Phosphor
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] } # Работа со временем
+rfd = "0.12"       # Диалоговые окна (выбор звука и папки сохранения)
+directories = "5.0"# Для поиска стандартных папок системы
+rand = "0.9.2"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] } # Обложки треков
+rodio = "0.17"
+global-hotkey = "0.8" # Глобальные горячие клавиши
+tray-icon = "0.26"    # Значок в трее и его меню
+libloading = "0.8"    # Подгрузка libvosk.dll во время работы (голосовое управление)
+
+[target.'cfg(windows)'.dependencies]
+# Системные медиаконтролы Windows (SMTC) для плашки «Сейчас играет».
+windows = { version = "0.62", features = ["Media_Control", "Foundation", "Storage_Streams", "Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Registry", "UI_Notifications", "Data_Xml_Dom", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant", "Win32_UI_Shell_PropertiesSystem", "Win32_Storage_EnhancedStorage"] }
+# Хэндл окна — чтобы убрать системную рамку Windows 11 вокруг прозрачного окна.
+raw-window-handle = "0.6"
+
+[build-dependencies]
+winres = "0.1.12"

@@ -1,0 +1,11 @@
+# Сборка
+/target/
+/installer/
+
+# Голосовая модель и libvosk (~140 МБ) — скачиваются скриптом scripts/get-vosk.ps1
+/resources/vosk/
+
+# Локальные настройки редактора и Claude Code
+/.claude/
+/.vscode/
+*.log

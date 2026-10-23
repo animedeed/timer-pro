@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+</helmet>
+<div style="width:350px;height:64px;box-sizing:border-box;background:#1C1E2B;border-radius:14px;border:1px solid {{ border }};display:flex;align-items:center;gap:8px;padding:0 11px 0 7px;font-family:Inter,sans-serif;color:#E9E9ED;cursor:grab;">
+  <div style="width:12px;height:24px;display:grid;grid-template-columns:3px 3px;grid-auto-rows:3px;gap:4px 3px;align-content:center;justify-content:center;flex:none;">
+    <span style="background:#464A5A;border-radius:2px;"></span><span style="background:#464A5A;border-radius:2px;"></span>
+    <span style="background:#464A5A;border-radius:2px;"></span><span style="background:#464A5A;border-radius:2px;"></span>
+    <span style="background:#464A5A;border-radius:2px;"></span><span style="background:#464A5A;border-radius:2px;"></span>
+  </div>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+    <div style="display:flex;align-items:center;gap:4px;height:14px;color:{{ labelColor }};">
+      <i class="{{ modeIcon }}" style="font-size:12px;"></i>
+      <span style="font-size:11px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ name }}</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-weight:500;font-size:26px;line-height:30px;color:{{ timeColor }};letter-spacing:0;">{{ time }}</div>
+  </div>
+  <div style="display:flex;gap:4px;flex:none;align-items:center;">
+  <sc-if value="{{ isRinging }}" hint-placeholder-val="{{ false }}">
+    <div style="width:84px;height:40px;border-radius:10px;background:#FF6B6B29;color:#FF6B6B;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;flex:none;cursor:pointer;">
+      <i class="ph ph-bell-slash" style="font-size:16px;"></i>Тихо
+    </div>
+  </sc-if>
+  <sc-if value="{{ notRinging }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:4px;flex:none;">
+      <div style="width:40px;height:40px;border-radius:10px;background:{{ playBg }};color:{{ playColor }};opacity:{{ playOpacity }};display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="{{ playIcon }}" style="font-size:20px;"></i></div>
+      <div style="width:40px;height:40px;border-radius:10px;background:#262938;color:#9397AB;opacity:{{ stopOpacity }};display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ph-fill ph-stop" style="font-size:18px;"></i></div>
+    </div>
+  </sc-if>
+  <div style="width:40px;height:40px;border-radius:10px;background:{{ menuBg }};color:{{ menuColor }};display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;"><i class="{{ menuIcon }}" style="font-size:20px;"></i></div>
+  </div>
+  <div style="width:1px;height:24px;background:#FFFFFF14;flex:none;"></div>
+  <div style="width:28px;height:28px;border-radius:8px;color:#6A6E80;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;" style-hover="background:#262938;color:#E9E9ED;"><i class="ph ph-x" style="font-size:16px;"></i></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:350,&quot;height&quot;:64},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#6478FF&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;running&quot;,&quot;paused&quot;,&quot;idle&quot;,&quot;ringing&quot;,&quot;expired&quot;],&quot;default&quot;:&quot;running&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;timer&quot;,&quot;stopwatch&quot;],&quot;default&quot;:&quot;timer&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;time&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;00:24:13&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Фокус&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;menuOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;menuUp&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, a = p.accent ?? '#6478FF', st = p.state ?? 'running';
+    const ring = st === 'ringing', exp = st === 'expired', idle = st === 'idle';
+    return {
+      time: p.time ?? '00:24:13',
+      name: p.label ?? (idle ? 'Нет закреплённого таймера' : ring ? 'Время вышло · Фокус' : 'Фокус'),
+      modeIcon: ring ? 'ph-fill ph-bell-ringing' : (p.mode === 'stopwatch' ? 'ph ph-timer' : 'ph ph-hourglass-medium'),
+      labelColor: ring || exp ? '#FF6B6B' : '#9397AB',
+      timeColor: ring || exp ? '#FF6B6B' : idle ? '#6A6E80' : '#E9E9ED',
+      border: ring ? '#FF6B6B66' : '#FFFFFF0F',
+      isRinging: ring, notRinging: !ring,
+      playIcon: st === 'running' ? 'ph-fill ph-pause' : 'ph-fill ph-play',
+      playBg: idle || exp ? '#262938' : a + '3D',
+      playColor: idle || exp ? '#9397AB' : a,
+      playOpacity: idle || exp ? 0.45 : 1,
+      stopOpacity: idle ? 0.45 : 1,
+      menuBg: p.menuOpen ? a + '3D' : '#262938',
+      menuColor: p.menuOpen ? a : '#9397AB',
+      menuIcon: p.menuOpen ? (p.menuUp ? 'ph ph-caret-up' : 'ph ph-caret-down') : 'ph ph-list',
+    };
+  }
+}
+</script>
+</body>
+</html>

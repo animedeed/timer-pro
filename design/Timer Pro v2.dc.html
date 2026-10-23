@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>body{margin:0;background:#11121A;color:#E9E9ED;font-family:Inter,sans-serif;}a{color:#9184D9;}a:hover{color:#B5ABFC;}</style>
+</helmet>
+<div style="padding:64px;display:flex;flex-direction:column;gap:64px;width:2380px;box-sizing:border-box;background:#11121A;color:#E9E9ED;font-family:Inter,sans-serif;">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px;">
+    <span style="font-size:13px;color:#6A6E80;letter-spacing:0.6px;text-transform:uppercase;font-weight:500;">Timer Pro · v2 · eframe/egui 0.27</span>
+    <h1 style="margin:0;font-size:42px;line-height:48px;font-weight:500;letter-spacing:-0.6px;">Перемотка, бегущая строка, горячие клавиши и трей</h1>
+    <p style="margin:0;font-size:15px;line-height:22px;color:#9397AB;text-wrap:pretty;">Продолжение «<a href="Timer Pro.dc.html">Timer Pro.dc.html</a>»: токены те же. Учтено: у блоков нет тени, плашка 326 px по центру, зазор между блоками 6 px (настраивается от 4 до 16), у play, stop и меню одинаковый шаг 4 px. Масштаб 1x. Жёлтый пунктир на кадрах — разметка для разработчика, в интерфейсе его нет.</p>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">0. Базовая стопка v2</h2>
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">0a · виджет 350×64 + зазор 6 + плашка 326×56 (отступ 12 с каждой стороны)</span>
+        <div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;align-items:center;gap:6px;width:350px;">
+          <dc-import name="Widget" accent="{{ accent }}" state="running" hint-size="350px,64px"></dc-import>
+          <div style="width:326px;height:56px;box-sizing:border-box;background:#1C1E2B;border:1px solid #FFFFFF0F;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 7px;position:relative;">
+            <div style="width:40px;height:40px;border-radius:8px;background:#5A4A7A;flex:none;"></div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Тёплое место</div>
+              <div style="font-size:11px;line-height:14px;color:#9397AB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Мумий Тролль<span style="color:#6A6E80;"> · Яндекс Музыка</span></div>
+            </div>
+            <div style="display:flex;gap:2px;align-items:center;flex:none;">
+              <div style="width:28px;height:32px;color:#9397AB;display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-back" style="font-size:16px;"></i></div>
+              <div style="width:32px;height:32px;border-radius:8px;background:{{ tint }};color:{{ accent }};display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-pause" style="font-size:16px;"></i></div>
+              <div style="width:28px;height:32px;color:#9397AB;display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-forward" style="font-size:16px;"></i></div>
+            </div>
+            <div style="position:absolute;left:13px;right:13px;bottom:3px;height:2px;border-radius:1px;background:#FFFFFF14;"><div style="width:37%;height:2px;border-radius:1px;background:{{ accent }};"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">1. Полоска прогресса с перемоткой</h2>
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <sc-for list="{{ seek }}" as="f" hint-placeholder-count="5">
+        <div style="display:flex;flex-direction:column;gap:8px;width:366px;">
+          <span style="font-size:12px;color:#9397AB;">{{ f.cap }}</span>
+          <div style="background:#4A5266;padding:20px;border-radius:4px;">
+            <div style="width:326px;height:56px;box-sizing:border-box;background:#1C1E2B;border:1px solid #FFFFFF0F;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 7px;position:relative;">
+              <div style="width:40px;height:40px;border-radius:8px;background:#5A4A7A;flex:none;"></div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                <div style="font-size:13px;line-height:18px;font-weight:500;color:{{ f.titleColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Тёплое место</div>
+                <sc-if value="{{ f.showTime }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:14px;white-space:nowrap;"><span style="font-weight:500;color:#E9E9ED;">{{ f.cur }}</span><span style="color:#6A6E80;"> / 3:45</span></div>
+                </sc-if>
+                <sc-if value="{{ f.showSub }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:11px;line-height:14px;color:#9397AB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Мумий Тролль<span style="color:#6A6E80;"> · Яндекс Музыка</span></div>
+                </sc-if>
+              </div>
+              <div style="display:flex;gap:2px;align-items:center;flex:none;">
+                <div style="width:28px;height:32px;color:#9397AB;display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-back" style="font-size:16px;"></i></div>
+                <div style="width:32px;height:32px;border-radius:8px;background:{{ f.playBg }};color:{{ f.playColor }};display:flex;align-items:center;justify-content:center;"><i class="{{ f.playIcon }}" style="font-size:16px;"></i></div>
+                <div style="width:28px;height:32px;color:#9397AB;display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-forward" style="font-size:16px;"></i></div>
+              </div>
+              <sc-if value="{{ f.showZone }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;left:13px;right:13px;bottom:3px;height:16px;box-sizing:border-box;border:1px dashed #E0C24F;border-radius:2px;"></div>
+              </sc-if>
+              <div style="position:absolute;left:13px;right:13px;bottom:3px;height:{{ f.barH }};border-radius:2px;background:#FFFFFF14;">
+                <div style="width:{{ f.pct }};height:100%;border-radius:2px;background:{{ f.fill }};"></div>
+                <sc-if value="{{ f.knob }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;left:calc({{ f.pct }} - {{ f.knobHalf }});top:50%;margin-top:-{{ f.knobHalf }};width:{{ f.knobSize }};height:{{ f.knobSize }};border-radius:50%;background:#F5F6FA;"></div>
+                </sc-if>
+              </div>
+              <i class="ph-fill ph-cursor" style="position:absolute;left:{{ f.curX }};top:41px;font-size:16px;color:#F5F6FA;filter:drop-shadow(0 0 1px #000);"></i>
+            </div>
+          </div>
+          <span style="font-size:12px;line-height:17px;color:#6A6E80;text-wrap:pretty;">{{ f.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;max-width:1500px;">
+      <div style="display:flex;flex-direction:column;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Геометрия</h3>
+        <sc-for list="{{ seekSpec }}" as="m" hint-placeholder-count="8">
+          <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;border-bottom:1px solid #FFFFFF0F;padding:7px 0;"><span style="font-size:13px;font-weight:500;">{{ m.a }}</span><span style="font-size:12px;line-height:17px;color:#9397AB;">{{ m.b }}</span></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Анимации</h3>
+        <sc-for list="{{ seekAnim }}" as="m" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:200px 70px minmax(0,1fr);gap:12px;border-bottom:1px solid #FFFFFF0F;padding:7px 0;"><span style="font-size:13px;font-weight:500;">{{ m.a }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#B2B6CA;">{{ m.t }}</span><span style="font-size:12px;line-height:17px;color:#9397AB;">{{ m.b }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">2. Бегущая строка</h2>
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <sc-for list="{{ marquee }}" as="f" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:8px;width:366px;">
+          <span style="font-size:12px;color:#9397AB;">{{ f.cap }}</span>
+          <div style="background:#4A5266;padding:20px;border-radius:4px;">
+            <div style="width:326px;height:56px;box-sizing:border-box;background:#1C1E2B;border:1px solid #FFFFFF0F;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 7px;position:relative;">
+              <div style="width:40px;height:40px;border-radius:8px;background:#3F5F6E;flex:none;"></div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;position:relative;outline:{{ f.outline }};">
+                <sc-if value="{{ f.ellipsis }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Концерт для фортепиано с оркестром № 2 до минор, соч. 18</div>
+                  <div style="font-size:11px;line-height:14px;color:#9397AB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Сергей Рахманинов, Денис Мацуев<span style="color:#6A6E80;"> · Spotify</span></div>
+                </sc-if>
+                <sc-if value="{{ f.moving }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;height:18px;overflow:hidden;display:flex;justify-content:{{ f.tJustify }};">
+                    <span style="flex:none;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;transform:translateX({{ f.tShift }});">Концерт для фортепиано с оркестром № 2 до минор, соч. 18</span>
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:16px;background:linear-gradient(90deg,#1C1E2B,#1C1E2B00);opacity:{{ f.tL }};"></div>
+                    <div style="position:absolute;right:0;top:0;bottom:0;width:16px;background:linear-gradient(270deg,#1C1E2B,#1C1E2B00);opacity:{{ f.tR }};"></div>
+                  </div>
+                  <div style="position:relative;height:14px;overflow:hidden;display:flex;justify-content:{{ f.sJustify }};">
+                    <span style="flex:none;font-size:11px;line-height:14px;color:#9397AB;white-space:nowrap;">Сергей Рахманинов, Денис Мацуев<span style="color:#6A6E80;"> · Spotify</span></span>
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:16px;background:linear-gradient(90deg,#1C1E2B,#1C1E2B00);opacity:{{ f.sL }};"></div>
+                    <div style="position:absolute;right:0;top:0;bottom:0;width:16px;background:linear-gradient(270deg,#1C1E2B,#1C1E2B00);opacity:{{ f.sR }};"></div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="display:flex;gap:2px;align-items:center;flex:none;">
+                <div style="width:28px;height:32px;color:#9397AB;display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-back" style="font-size:16px;"></i></div>
+                <div style="width:32px;height:32px;border-radius:8px;background:{{ tint }};color:{{ accent }};display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-pause" style="font-size:16px;"></i></div>
+                <div style="width:28px;height:32px;color:#9397AB;display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-forward" style="font-size:16px;"></i></div>
+              </div>
+              <div style="position:absolute;left:13px;right:13px;bottom:3px;height:2px;border-radius:1px;background:#FFFFFF14;"><div style="width:14%;height:2px;border-radius:1px;background:{{ accent }};"></div></div>
+            </div>
+          </div>
+          <span style="font-size:12px;line-height:17px;color:#6A6E80;text-wrap:pretty;">{{ f.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:1500px;">
+      <h3 style="margin:0;font-size:16px;font-weight:500;">Цикл (пример: название длиннее колонки на 176 px, исполнитель на 72 px)</h3>
+      <div style="display:flex;gap:2px;height:44px;font-size:12px;">
+        <div style="width:120px;background:#262938;border-radius:4px;padding:6px 8px;box-sizing:border-box;display:flex;flex-direction:column;"><span style="font-weight:500;">Пауза</span><span style="color:#9397AB;font-family:'JetBrains Mono',monospace;font-size:11px;">1200 мс</span></div>
+        <div style="width:587px;background:{{ tint }};border-radius:4px;padding:6px 8px;box-sizing:border-box;display:flex;flex-direction:column;position:relative;"><span style="font-weight:500;">Проезд названия · 176 px ÷ 30 px/с, линейно</span><span style="color:#9397AB;font-family:'JetBrains Mono',monospace;font-size:11px;">5867 мс</span><div style="position:absolute;left:0;bottom:-14px;width:240px;height:10px;background:#3A3D4D;border-radius:2px;"></div></div>
+        <div style="width:100px;background:#262938;border-radius:4px;padding:6px 8px;box-sizing:border-box;display:flex;flex-direction:column;"><span style="font-weight:500;">Пауза</span><span style="color:#9397AB;font-family:'JetBrains Mono',monospace;font-size:11px;">1000 мс</span></div>
+        <div style="width:90px;background:#2F3344;border-radius:4px;padding:6px 8px;box-sizing:border-box;display:flex;flex-direction:column;"><span style="font-weight:500;">Возврат</span><span style="color:#9397AB;font-family:'JetBrains Mono',monospace;font-size:11px;">300 мс</span></div>
+        <div style="width:200px;border:1px dashed #464A5A;border-radius:4px;padding:6px 8px;box-sizing:border-box;display:flex;flex-direction:column;color:#9397AB;"><span>Курсор над плашкой →</span><span style="font-size:11px;">повтор с первой паузы</span></div>
+      </div>
+      <span style="font-size:12px;color:#6A6E80;margin-top:10px;">Серая полоса под «Проездом» — исполнитель: 72 px ÷ 30 px/с = 2400 мс. Он доезжает раньше, стоит в конце и возвращается вместе с названием.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;max-width:1500px;">
+      <sc-for list="{{ marqueeSpec }}" as="m" hint-placeholder-count="9">
+        <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px;border-bottom:1px solid #FFFFFF0F;padding:7px 0;"><span style="font-size:13px;font-weight:500;">{{ m.a }}</span><span style="font-size:12px;line-height:17px;color:#9397AB;">{{ m.b }}</span></div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">3–4. Настройки: четвёртая вкладка «Система» · меню 350×540</h2>
+    <p style="margin:0;font-size:14px;line-height:20px;color:#9397AB;max-width:960px;text-wrap:pretty;">В треке четыре вкладки по 78,5 px, иконка 14 и подпись 12 px. Подвкладки внутри «Опций» не делаю: это был бы второй уровень навигации в блоке шириной 326 px. В «Опциях» остаётся внешний вид и звук. В «Систему» уходит всё, что связано с ОС: горячие клавиши, трей и папка данных (перенесена из «Опций»). Высота меню 520 → 540: самая длинная вкладка, «Система», занимает 531 px.</p>
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <sc-for list="{{ menus }}" as="mn" hint-placeholder-count="2">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-size:12px;color:#9397AB;">{{ mn.cap }}</span>
+          <div style="background:#4A5266;padding:20px;border-radius:4px;">
+            <div style="width:350px;height:540px;box-sizing:border-box;background:#1C1E2B;border-radius:14px;border:1px solid #FFFFFF0F;display:flex;flex-direction:column;overflow:hidden;">
+              <div style="padding:11px 11px 12px;flex:none;">
+                <div style="height:36px;box-sizing:border-box;background:#161824;border-radius:10px;padding:3px;display:flex;gap:2px;">
+                  <sc-for list="{{ mn.tabs }}" as="t" hint-placeholder-count="4">
+                    <div style="flex:1;min-width:0;height:30px;border-radius:8px;background:{{ t.bg }};color:{{ t.color }};display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:500;"><i class="{{ t.icon }}" style="font-size:14px;"></i>{{ t.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <sc-if value="{{ mn.isOptions }}" hint-placeholder-val="{{ true }}">
+                <div style="flex:1;display:flex;flex-direction:column;gap:12px;padding:0 11px 11px;">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Акцент</span>
+                    <div style="display:flex;gap:10px;padding-left:2px;">
+                      <sc-for list="{{ swatches }}" as="s" hint-placeholder-count="8"><div style="width:24px;height:24px;border-radius:12px;background:{{ s.c }};box-shadow:{{ s.ring }};"></div></sc-for>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:4px;">
+                    <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Будильник</span>
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;">
+                      <span style="font-size:13px;width:72px;flex:none;">Громкость</span>
+                      <div style="flex:1;position:relative;height:16px;display:flex;align-items:center;"><div style="width:100%;height:4px;border-radius:2px;background:#3A3D4D;"></div><div style="position:absolute;left:0;width:70%;height:4px;border-radius:2px;background:{{ accent }};"></div><div style="position:absolute;left:calc(70% - 7px);width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div></div>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9397AB;width:36px;text-align:right;">70%</span>
+                    </div>
+                    <div style="height:32px;display:flex;align-items:center;gap:6px;">
+                      <span style="font-size:13px;width:72px;flex:none;">Звук</span>
+                      <span style="flex:1;min-width:0;font-size:12px;color:#9397AB;">Встроенный</span>
+                      <div style="height:28px;padding:0 10px;border-radius:8px;background:#262938;font-size:12px;font-weight:500;display:flex;align-items:center;">Выбрать…</div>
+                      <div style="width:28px;height:28px;border-radius:8px;background:#262938;color:#9397AB;opacity:0.45;display:flex;align-items:center;justify-content:center;"><i class="ph ph-arrow-counter-clockwise" style="font-size:14px;"></i></div>
+                      <div style="width:28px;height:28px;border-radius:8px;background:{{ tint }};color:{{ accent }};display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-play" style="font-size:14px;"></i></div>
+                    </div>
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;outline:1px dashed #E0C24F;outline-offset:1px;">
+                      <span style="flex:1;font-size:13px;">Уведомление Windows</span>
+                      <div style="position:relative;width:32px;height:18px;border-radius:9px;background:{{ accent }};flex:none;"><div style="position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div></div>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;">
+                    <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;margin-bottom:4px;">Окно и музыка</span>
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;"><span style="flex:1;font-size:13px;">Поверх всех окон</span><div style="position:relative;width:32px;height:18px;border-radius:9px;background:{{ accent }};"><div style="position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div></div></div>
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;">
+                      <span style="font-size:13px;width:128px;flex:none;">Зазор между блоками</span>
+                      <div style="flex:1;position:relative;height:16px;display:flex;align-items:center;"><div style="width:100%;height:4px;border-radius:2px;background:#3A3D4D;"></div><div style="position:absolute;left:0;width:16.7%;height:4px;border-radius:2px;background:{{ accent }};"></div><div style="position:absolute;left:calc(16.7% - 7px);width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div></div>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9397AB;width:36px;text-align:right;">6 px</span>
+                    </div>
+                    <sc-for list="{{ musicToggles }}" as="g" hint-placeholder-count="4">
+                      <div style="height:32px;display:flex;align-items:center;gap:12px;padding-left:{{ g.indent }};">
+                        <span style="flex:1;font-size:13px;color:{{ g.text }};">{{ g.label }}</span>
+                        <div style="position:relative;width:32px;height:18px;border-radius:9px;background:{{ g.track }};flex:none;"><div style="position:absolute;top:2px;left:{{ g.knobX }};width:14px;height:14px;border-radius:7px;background:{{ g.knob }};"></div></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ mn.isSystem }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1;display:flex;flex-direction:column;gap:12px;padding:0 11px 11px;">
+                  <div style="display:flex;flex-direction:column;">
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;">
+                      <span style="flex:1;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Горячие клавиши</span>
+                      <div style="position:relative;width:32px;height:18px;border-radius:9px;background:{{ accent }};flex:none;"><div style="position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div></div>
+                    </div>
+                    <sc-for list="{{ hkRows }}" as="h" hint-placeholder-count="8">
+                      <div style="height:30px;display:flex;align-items:center;gap:12px;">
+                        <span style="flex:1;min-width:0;font-size:13px;color:{{ h.labelColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ h.label }}</span>
+                        <div style="width:140px;height:26px;box-sizing:border-box;border-radius:6px;background:{{ h.bg }};border:1px solid {{ h.border }};padding:0 8px;display:flex;align-items:center;gap:6px;flex:none;">
+                          <span style="flex:1;font-size:12px;line-height:16px;font-weight:{{ h.weight }};color:{{ h.color }};white-space:nowrap;">{{ h.text }}</span>
+                        </div>
+                      </div>
+                    </sc-for>
+                    <div style="height:28px;display:flex;align-items:center;margin-top:4px;">
+                      <div style="height:28px;padding:0 8px 0 6px;margin-left:-6px;border-radius:8px;display:flex;align-items:center;gap:6px;color:#9397AB;font-size:12px;font-weight:500;"><i class="ph ph-arrow-counter-clockwise" style="font-size:14px;"></i>Сбросить все по умолчанию</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;">
+                    <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;margin-bottom:4px;">Трей</span>
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;"><span style="flex:1;font-size:13px;">Значок в трее</span><div style="position:relative;width:32px;height:18px;border-radius:9px;background:{{ accent }};"><div style="position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div></div></div>
+                    <div style="height:32px;display:flex;align-items:center;gap:12px;padding-left:12px;"><span style="flex:1;font-size:13px;color:#9397AB;">Крестик сворачивает в трей</span><div style="position:relative;width:32px;height:18px;border-radius:9px;background:#3A3D4D;"><div style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:7px;background:#9397AB;"></div></div></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:4px;">
+                    <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Данные</span>
+                    <div style="display:flex;gap:6px;">
+                      <div style="flex:1;min-width:0;height:32px;box-sizing:border-box;background:#262938;border:1px solid #FFFFFF0F;border-radius:8px;padding:0 10px;display:flex;align-items:center;gap:6px;color:#9397AB;font-size:12px;"><i class="ph ph-folder" style="font-size:14px;flex:none;"></i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">C:\Users\anna\AppData\Roaming\TimerPro</span></div>
+                      <div style="height:32px;padding:0 10px;border-radius:8px;background:#262938;font-size:12px;font-weight:500;display:flex;align-items:center;">Изменить</div>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="display:flex;flex-direction:column;max-width:560px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Вертикальный бюджет, px</h3>
+        <sc-for list="{{ budget }}" as="m" hint-placeholder-count="8">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:12px;border-bottom:1px solid #FFFFFF0F;padding:6px 0;font-size:12px;"><span style="color:#E9E9ED;">{{ m.a }}</span><span style="font-family:'JetBrains Mono',monospace;color:#9397AB;text-align:right;">{{ m.o }}</span><span style="font-family:'JetBrains Mono',monospace;color:#9397AB;text-align:right;">{{ m.s }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">4a. Поле горячей клавиши · 140×26</h2>
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="background:#4A5266;padding:20px;border-radius:4px;">
+        <div style="width:350px;box-sizing:border-box;background:#1C1E2B;border-radius:14px;border:1px solid #FFFFFF0F;padding:7px 11px;display:flex;flex-direction:column;">
+          <sc-for list="{{ hkStates }}" as="h" hint-placeholder-count="8">
+            <div style="display:flex;flex-direction:column;padding:4px 0;border-bottom:1px dashed #FFFFFF14;">
+              <span style="font-size:10px;line-height:12px;color:#E0C24F;font-family:'JetBrains Mono',monospace;">{{ h.cap }}</span>
+              <div style="height:30px;display:flex;align-items:center;gap:12px;opacity:{{ h.op }};">
+                <span style="flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ h.label }}</span>
+                <div style="width:140px;height:26px;box-sizing:border-box;border-radius:6px;background:{{ h.bg }};border:1px solid {{ h.border }};padding:0 3px 0 8px;display:flex;align-items:center;gap:4px;flex:none;">
+                  <sc-if value="{{ h.warn }}" hint-placeholder-val="{{ false }}"><i class="ph-fill ph-warning" style="font-size:12px;color:#FF6B6B;"></i></sc-if>
+                  <sc-if value="{{ h.rec }}" hint-placeholder-val="{{ false }}"><span style="width:6px;height:6px;border-radius:3px;background:{{ accent }};flex:none;"></span></sc-if>
+                  <span style="flex:1;font-size:12px;line-height:16px;font-weight:{{ h.weight }};color:{{ h.color }};white-space:nowrap;">{{ h.text }}</span>
+                  <sc-if value="{{ h.clear }}" hint-placeholder-val="{{ false }}"><div style="width:20px;height:20px;border-radius:4px;background:#3A3D4D;color:#E9E9ED;display:flex;align-items:center;justify-content:center;"><i class="ph ph-x" style="font-size:12px;"></i></div></sc-if>
+                </div>
+              </div>
+              <sc-if value="{{ h.hasMsg }}" hint-placeholder-val="{{ false }}">
+                <div style="height:24px;display:flex;align-items:center;gap:8px;">
+                  <span style="flex:1;min-width:0;font-size:12px;line-height:16px;color:{{ h.msgColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ h.msg }}</span>
+                  <sc-if value="{{ h.replace }}" hint-placeholder-val="{{ false }}">
+                    <div style="height:22px;padding:0 8px;border-radius:6px;border:1px solid {{ accent }};color:{{ accent }};font-size:12px;font-weight:500;display:flex;align-items:center;box-sizing:border-box;">Заменить</div>
+                    <div style="height:22px;padding:0 8px;border-radius:6px;background:#262938;color:#E9E9ED;font-size:12px;font-weight:500;display:flex;align-items:center;">Отмена</div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;max-width:900px;flex:1;min-width:500px;">
+        <sc-for list="{{ hkSpec }}" as="m" hint-placeholder-count="10">
+          <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px;border-bottom:1px solid #FFFFFF0F;padding:7px 0;"><span style="font-size:13px;font-weight:500;">{{ m.a }}</span><span style="font-size:12px;line-height:17px;color:#9397AB;text-wrap:pretty;">{{ m.b }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">4b. Трей: значок и меню</h2>
+    <div style="display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:grid;grid-template-columns:120px repeat(3,110px);gap:12px;align-items:center;font-size:12px;color:#9397AB;">
+          <span></span><span>Не идёт</span><span>Идёт</span><span>Звенит</span>
+          <sc-for list="{{ trayRows }}" as="r" hint-placeholder-count="4">
+            <span>{{ r.cap }}</span>
+            <sc-for list="{{ r.icons }}" as="ic" hint-placeholder-count="3">
+              <div style="height:{{ r.cell }};background:{{ r.bg }};border-radius:4px;display:flex;align-items:center;justify-content:center;">
+                <svg width="{{ r.px }}" height="{{ r.px }}" viewBox="0 0 16 16" style="image-rendering:pixelated;">
+                  <circle cx="8" cy="8" r="7.5" fill="{{ ic.disc }}"></circle>
+                  <circle cx="8" cy="8" r="4.25" fill="none" stroke="{{ ic.ink }}" stroke-width="1.5"></circle>
+                  <line x1="8" y1="8" x2="8" y2="5.25" stroke="{{ ic.ink }}" stroke-width="1.5" stroke-linecap="round"></line>
+                </svg>
+              </div>
+            </sc-for>
+          </sc-for>
+        </div>
+        <span style="font-size:12px;line-height:17px;color:#6A6E80;max-width:470px;text-wrap:pretty;">Значок собирается в рантайме из трёх примитивов в RGBA-буфер 16×16 и 32×32 (32 — для 200 % DPI), поэтому учитывает акцент пользователя. Сетка 16 px: диск r 7,5 в центре (8; 8); кольцо r 4,25, обводка 1,5; стрелка от (8; 8) до (8; 5,25), обводка 1,5, скруглённые концы. Для 32 px все числа ×2. Значок не мигает.</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <span style="font-size:12px;color:#9397AB;">Системное меню (правый клик). Рисует Windows, здесь только пункты и порядок.</span>
+        <div style="width:260px;background:#2B2B2B;border-radius:8px;padding:4px;display:flex;flex-direction:column;font-family:'Segoe UI',Inter,sans-serif;font-size:12px;">
+          <sc-for list="{{ trayMenu }}" as="t" hint-placeholder-count="8">
+            <sc-if value="{{ t.sep }}" hint-placeholder-val="{{ false }}"><div style="height:1px;background:#FFFFFF1F;margin:4px 8px;"></div></sc-if>
+            <sc-if value="{{ t.item }}" hint-placeholder-val="{{ true }}"><div style="height:28px;display:flex;align-items:center;gap:8px;padding:0 10px;color:{{ t.color }};"><span style="width:12px;">{{ t.check }}</span><span style="flex:1;">{{ t.label }}</span></div></sc-if>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;max-width:640px;flex:1;min-width:420px;">
+        <sc-for list="{{ traySpec }}" as="m" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px;border-bottom:1px solid #FFFFFF0F;padding:7px 0;"><span style="font-size:13px;font-weight:500;">{{ m.a }}</span><span style="font-size:12px;line-height:17px;color:#9397AB;text-wrap:pretty;">{{ m.b }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">5. Новые токены и сводка анимаций</h2>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;max-width:1700px;">
+      <div style="display:flex;flex-direction:column;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Токены (дополняют v1)</h3>
+        <sc-for list="{{ tokens }}" as="c" hint-placeholder-count="10">
+          <div style="display:grid;grid-template-columns:24px 170px 110px minmax(0,1fr);gap:10px;align-items:center;border-bottom:1px solid #FFFFFF0F;padding:5px 0;">
+            <span style="width:20px;height:20px;border-radius:4px;background:{{ c.hex }};box-shadow:0 0 0 1px #FFFFFF29;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ c.name }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#B2B6CA;">{{ c.hex }}</span>
+            <span style="font-size:12px;color:#9397AB;line-height:16px;">{{ c.use }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Все новые анимации · ease-out cubic 1 − (1 − t)³, если не указано иное</h3>
+        <sc-for list="{{ allAnim }}" as="m" hint-placeholder-count="14">
+          <div style="display:grid;grid-template-columns:220px 80px minmax(0,1fr);gap:12px;border-bottom:1px solid #FFFFFF0F;padding:6px 0;"><span style="font-size:13px;font-weight:500;">{{ m.a }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#B2B6CA;">{{ m.t }}</span><span style="font-size:12px;line-height:17px;color:#9397AB;">{{ m.b }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#6478FF&quot;,&quot;options&quot;:[&quot;#6478FF&quot;,&quot;#3FB8AF&quot;,&quot;#E0A84F&quot;,&quot;#D96BA8&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.accent ?? '#6478FF', tint = a + '3D';
+    const kv = (a, b) => ({ a, b }), kt = (a, t, b) => ({ a, t, b });
+    const fr = (o) => Object.assign({ titleColor: '#E9E9ED', showTime: false, showSub: true, playBg: tint, playColor: a, playIcon: 'ph-fill ph-pause', showZone: false, barH: '2px', pct: '30%', fill: a, knob: false, knobSize: '0px', knobHalf: '0px', curX: '-100px' }, o);
+    const seek = [
+      fr({ cap: '1a · покой', note: 'Высота 2, трек line, заливка accent (на паузе — text.tertiary). Позиция обновляется раз в 1 с.' }),
+      fr({ cap: '1b · наведение (зона захвата отмечена пунктиром)', showZone: true, barH: '4px', knob: true, knobSize: '8px', knobHalf: '4px', curX: '210px', note: 'Курсор в зоне 298×16 (12 над полоской + 2 полоска + 2 под ней): полоска 2 → 4, растёт вверх, низ остаётся на 4 от края. Появляется бегунок ⌀8 на текущей позиции. Курсор — рука.' }),
+      fr({ cap: '1c · перетаскивание', barH: '4px', pct: '37%', knob: true, knobSize: '10px', knobHalf: '5px', curX: '120px', showTime: true, showSub: false, cur: '1:23', note: 'Бегунок ⌀10 под курсором, заливка идёт за ним. Вместо строки «исполнитель · источник» — время: JetBrains Mono 11/14, текущее Medium text.primary, « / 3:45» Regular text.tertiary. Название не перекрывается.' }),
+      fr({ cap: '1d · перетаскивание на паузе', titleColor: '#9397AB', playBg: '#262938', playColor: '#E9E9ED', playIcon: 'ph-fill ph-play', barH: '4px', pct: '62%', fill: '#6A6E80', knob: true, knobSize: '10px', knobHalf: '5px', curX: '195px', showTime: true, showSub: false, cur: '2:20', note: 'Те же размеры, заливка text.tertiary. Бегунок всегда knob #F5F6FA.' }),
+      fr({ cap: '1e · источник без перемотки, курсор над полоской', curX: '160px', note: 'Без изменений: высота 2, без бегунка, курсор стрелка. Клик и перетаскивание в зоне двигают окно, как в любом месте плашки.' }),
+    ];
+    const seekSpec = [
+      kv('Трек', 'x 14…312 от края плашки (ширина 298), низ на 4 от нижнего края. Покой: высота 2, радиус 1. Наведение и перетаскивание: высота 4, радиус 2.'),
+      kv('Зона захвата', 'x 14…312, y 36…52 от верха плашки (высота 16). Перехватывает ввод раньше перетаскивания окна.'),
+      kv('Бегунок', 'Круг knob #F5F6FA; ⌀8 при наведении, ⌀10 при перетаскивании. Центр на вертикальной оси трека (y 50), x = 14 + 298 × позиция. Выход за трек — ограничение 0…1.'),
+      kv('Клик без перетаскивания', 'Сразу перематывает в точку клика, бегунок переезжает туда за 150 мс.'),
+      kv('Подпись времени', 'Формат м:сс, для треков от 1 ч — ч:мм:сс. Слева в колонке текста, на месте второй строки.'),
+      kv('Во время перетаскивания', 'Обновления позиции от источника игнорируются. Команда перемотки отправляется один раз, при отпускании.'),
+      kv('Esc во время перетаскивания', 'Отмена: бегунок возвращается на позицию источника за 150 мс.'),
+      kv('Цвета', 'Трек line #FFFFFF14; заливка accent или text.tertiary; бегунок knob.'),
+    ];
+    const seekAnim = [
+      kt('Вход в зону', '120 мс', 'Высота 2 → 4, ⌀ бегунка 0 → 8, альфа бегунка 0 → 1.'),
+      kt('Выход из зоны', '150 мс', 'Обратно 4 → 2, ⌀ 8 → 0. Задержка 0.'),
+      kt('Начало перетаскивания', '80 мс', '⌀ бегунка 8 → 10.'),
+      kt('Смена второй строки', '120 мс', 'Кросс-фейд «исполнитель» ↔ время, без сдвига.'),
+      kt('Отпускание', '800 + 150 мс', 'Время держится 800 мс, затем кросс-фейд 150 мс обратно. ⌀ 10 → 8 за 80 мс, если курсор ещё в зоне.'),
+      kt('Подтверждённая позиция', '250 мс', 'Заливка доезжает до позиции, которую вернул источник (твин из v1).'),
+    ];
+    const mf = (o) => Object.assign({ ellipsis: false, moving: true, tJustify: 'flex-start', tShift: '0px', tL: 0, tR: 1, sJustify: 'flex-start', sL: 0, sR: 1, outline: 'none' }, o);
+    const marquee = [
+      mf({ cap: '2a · покой: многоточие', ellipsis: true, moving: false, note: 'Обе строки обрезаны многоточием, без растворения.' }),
+      mf({ cap: '2b · начало проезда (пауза 1200 мс)', outline: '1px dashed #E0C24F', note: 'Многоточие убрано, справа растворение 16 px. Колонка 158 px (x 58…216), пунктир — её границы.' }),
+      mf({ cap: '2c · середина: название едет, исполнитель доехал', tShift: '-88px', tL: 1, tR: 1, sJustify: 'flex-end', sL: 1, sR: 0, note: 'Название сдвинуто на 88 px, растворение с обеих сторон. Исполнитель короче и уже в конце: растворение только слева.' }),
+      mf({ cap: '2d · конец (пауза 1000 мс)', tJustify: 'flex-end', tL: 1, tR: 0, sJustify: 'flex-end', sL: 1, sR: 0, note: 'Обе строки у правого края, растворение только слева. Дальше возврат 300 мс и снова многоточие.' }),
+    ];
+    const marqueeSpec = [
+      kv('Когда бежит', 'Только если ширина текста больше ширины колонки (158 px при обложке, 208 без неё). Один цикл после смены трека и по кругу, пока курсор над плашкой.'),
+      kv('Скорость', '30 px/с, линейно (без кривой), одинаково для обеих строк.'),
+      kv('Пауза в начале', '1200 мс. На это время многоточие сменяется растворением справа.'),
+      kv('Пауза в конце', '1000 мс после того, как обе строки доехали.'),
+      kv('Возврат', '300 мс, ease-out cubic, обе строки одновременно в 0.'),
+      kv('Вторая строка', 'Своё расстояние, общая скорость и общий старт. Короткая доезжает раньше и ждёт. Если строка влезает, она не двигается и не растворяется.'),
+      kv('Растворение у краёв', 'Ширина 16 px на всю высоту строки. В egui: Mesh из 4 вершин поверх клипнутого текста, цвет block.bg #1C1E2B с альфой 255 у края → 0 внутрь. Левое: при сдвиге > 0. Правое: пока конец текста не доехал. Появление и исчезновение 120 мс.'),
+      kv('Курсор ушёл посреди цикла', 'Текущий проезд прерывается, сразу возврат 300 мс, затем многоточие.'),
+      kv('Во время перетаскивания полоски', 'Бегущая строка ставится на паузу на месте; вторая строка заменена временем.'),
+    ];
+    const tabs = (sel) => [['Таймеры', 'ph ph-hourglass-medium'], ['История', 'ph ph-calendar-blank'], ['Опции', 'ph ph-sliders-horizontal'], ['Система', 'ph ph-keyboard']]
+      .map(([label, icon], i) => ({ label, icon, bg: i === sel ? '#2F3344' : 'transparent', color: i === sel ? '#E9E9ED' : '#9397AB' }));
+    const menus = [
+      { cap: '3a · Опции: внешний вид и звук; «Уведомление Windows» отмечено пунктиром', tabs: tabs(2), isOptions: true, isSystem: false },
+      { cap: '3b · Система: горячие клавиши, трей, данные', tabs: tabs(3), isOptions: false, isSystem: true },
+    ];
+    const tg = (label, on, ind) => ({ label, indent: ind ? '12px' : '0px', text: ind ? '#9397AB' : '#E9E9ED', track: on ? a : '#3A3D4D', knob: on ? '#F5F6FA' : '#9397AB', knobX: on ? '16px' : '2px' });
+    const hk = (label, text, st) => {
+      const set = st === 'set';
+      return { label, text, labelColor: '#E9E9ED', bg: set ? '#262938' : 'transparent', border: set ? '#FFFFFF0F' : '#FFFFFF14', color: set ? '#E9E9ED' : '#6A6E80', weight: set ? 500 : 400 };
+    };
+    const hkRows = [
+      hk('Старт / пауза', 'Ctrl+Alt+Пробел', 'set'), hk('Стоп и записать', 'Ctrl+Alt+Enter', 'set'), hk('Тихо (будильник)', 'Ctrl+Alt+Q', 'set'),
+      hk('Показать / скрыть виджет', 'Ctrl+Alt+T', 'set'), hk('Открыть / закрыть меню', 'Ctrl+Alt+O', 'set'),
+      hk('Музыка: играть / пауза', 'Не назначено', 'none'), hk('Музыка: следующий', 'Не назначено', 'none'), hk('Музыка: предыдущий', 'Не назначено', 'none'),
+    ];
+    const hs = (o) => Object.assign({ op: 1, bg: '#262938', border: '#FFFFFF0F', color: '#E9E9ED', weight: 500, warn: false, rec: false, clear: false, hasMsg: false, replace: false, msg: '', msgColor: '#FF6B6B' }, o);
+    const hkStates = [
+      hs({ cap: 'назначено', label: 'Старт / пауза', text: 'Ctrl+Alt+Пробел' }),
+      hs({ cap: 'назначено · наведение', label: 'Старт / пауза', text: 'Ctrl+Alt+Пробел', bg: '#2F3344', clear: true }),
+      hs({ cap: 'не назначено', label: 'Музыка: следующий', text: 'Не назначено', bg: 'transparent', border: '#FFFFFF14', color: '#6A6E80', weight: 400 }),
+      hs({ cap: 'запись · пусто', label: 'Музыка: следующий', text: 'Нажмите сочетание…', bg: tint, border: a, color: '#E9E9ED', weight: 400, rec: true, hasMsg: true, msg: 'Esc — отмена', msgColor: '#6A6E80' }),
+      hs({ cap: 'запись · зажаты модификаторы', label: 'Музыка: следующий', text: 'Ctrl+Alt+…', bg: tint, border: a, rec: true, hasMsg: true, msg: 'Esc — отмена', msgColor: '#6A6E80' }),
+      hs({ cap: 'конфликт · другое действие', label: 'Музыка: следующий', text: 'Ctrl+Alt+O', bg: '#FF6B6B29', border: '#FF6B6B', color: '#FF6B6B', warn: true, hasMsg: true, replace: true, msg: 'Уже у «Открыть / закрыть меню»' }),
+      hs({ cap: 'конфликт · занято системой', label: 'Музыка: следующий', text: 'Ctrl+Alt+Del', bg: '#FF6B6B29', border: '#FF6B6B', color: '#FF6B6B', warn: true, hasMsg: true, msg: 'Занято Windows или другой программой' }),
+      hs({ cap: 'общий переключатель выключен', label: 'Старт / пауза', text: 'Ctrl+Alt+Пробел', op: 0.45 }),
+    ];
+    const hkSpec = [
+      kv('Строка', 'Высота 30. Подпись Inter Regular 13/18 text.primary, flex; зазор 12; поле 140×26 у правого края.'),
+      kv('Поле', '140×26, радиус 6, обводка 1, отступ слева 8. Текст Inter 12/16. Сочетание пишется через «+» без пробелов, клавиши по-русски: Пробел, Enter, Esc, Tab, Стрелка вверх, F1…F24.'),
+      kv('Назначено', 'Заливка surface.2, обводка block.stroke #FFFFFF0F, текст Medium text.primary.'),
+      kv('Наведение', 'Заливка surface.3, справа кнопка «очистить» 20×20 (отступ 3), радиус 4, заливка #3A3D4D, иконка ph-x 12. Клик по кнопке — «Не назначено». Клик по полю — запись.'),
+      kv('Не назначено', 'Без заливки, обводка line #FFFFFF14, текст Regular text.tertiary.'),
+      kv('Запись', 'Заливка accent.tint, обводка accent, точка 6×6 accent слева (пульс альфы 1 ↔ 0,35, 1000 мс). Пока зажаты только модификаторы — «Ctrl+Alt+…». Сочетание фиксируется по первой не-модификаторной клавише. Под строкой подсказка 24 px «Esc — отмена», text.tertiary 12. Esc отменяет запись, клик вне поля — тоже. Одиночная клавиша без Ctrl/Alt/Win не принимается (кроме F13–F24 и медиаклавиш).'),
+      kv('Конфликт с действием', 'Поле: заливка danger.tint, обводка danger, иконка ph-warning Fill 12 danger. Ниже строка 24 px: текст danger 12 «Уже у «…»» и две кнопки 22 px: «Заменить» (контур accent) снимает сочетание с другого действия, «Отмена» (surface.2) возвращает прежнее значение.'),
+      kv('Конфликт с системой', 'Если RegisterHotKey вернул ошибку: тот же вид, текст «Занято Windows или другой программой», без кнопок. Через 2500 мс поле возвращается к прежнему значению.'),
+      kv('Выключено', 'Общий переключатель «Горячие клавиши» выключен: все строки и «Сбросить» с альфой 0,45 и не реагируют; хоткеи сняты с регистрации.'),
+      kv('Сбросить все', 'Кнопка-призрак 28 px: иконка 14 + текст 12 Medium text.secondary, hover — surface.2. Без подтверждения: возвращает значения по умолчанию из этого макета.'),
+    ];
+    const ic = (disc, ink) => ({ disc, ink });
+    const icons = [ic('#2F3344', '#E9E9ED'), ic(a, '#F5F6FA'), ic('#FF6B6B', '#14151F')];
+    const trayRows = [
+      { cap: '16×16, тёмная панель', px: '16', cell: '32px', bg: '#202020', icons },
+      { cap: '16×16, светлая панель', px: '16', cell: '32px', bg: '#EEEEEE', icons },
+      { cap: '32×32 (200 %)', px: '32', cell: '48px', bg: '#202020', icons },
+      { cap: 'Увеличение ×4', px: '64', cell: '80px', bg: '#202020', icons },
+    ];
+    const tm = (label, color, check) => ({ item: true, sep: false, label, color: color || '#FFFFFF', check: check || '' });
+    const trayMenu = [tm('Скрыть виджет'), tm('Пауза — «Фокус»'), tm('Стоп и записать'), tm('Тихо', '#FFFFFF66'), { item: false, sep: true }, tm('Поверх всех окон', null, '✓'), { item: false, sep: true }, tm('Выход')];
+    const traySpec = [
+      kv('Порядок меню', '1 Показать / Скрыть виджет · 2 Старт / Пауза — «имя закреплённого» · 3 Стоп и записать · 4 Тихо · разделитель · 5 Поверх всех окон (галочка) · разделитель · 6 Выход.'),
+      kv('Неактивные пункты', '«Тихо» — пока будильник не звенит. Пункты 2–3 — если нет закреплённого таймера (тогда п. 2 называется «Старт / пауза»).'),
+      kv('Клики по значку', 'Левый — показать/скрыть виджет. Правый — меню. Двойной — то же, что левый.'),
+      kv('Подсказка значка', '«Timer Pro — Фокус 00:18:42», обновление раз в 1 с; без таймера — «Timer Pro».'),
+      kv('Цвета', 'Не идёт: диск surface.3 #2F3344, рисунок text.primary. Идёт: диск accent, рисунок #F5F6FA или #14151F по контрасту (как on.accent). Звенит: диск danger #FF6B6B, рисунок #14151F.'),
+      kv('Крестик сворачивает в трей', 'Подопция, активна только при включённом значке. Иначе альфа 0,45. Если значок выключен, крестик всегда закрывает программу.'),
+      kv('Скрытый виджет', 'Окно просто убирается до следующего вызова (хоткей, значок, пункт меню). Будильник при скрытом окне показывает виджет снова.'),
+    ];
+    const tokens = [
+      ['fade.edge', '#1C1E2BFF', 'Растворение бегущей строки, 16 px, альфа FF → 00'],
+      ['knob', '#F5F6FAFF', 'Бегунок перемотки (тот же токен, что у слайдеров)'],
+      ['hit.debug', '#E0C24FFF', 'Только разметка на макете, в коде не нужен'],
+      ['field.hk.bg', '#262938FF', 'Поле сочетания, назначено (surface.2)'],
+      ['field.hk.hover', '#2F3344FF', 'Поле сочетания, наведение (surface.3)'],
+      ['field.hk.clear', '#3A3D4DFF', 'Кнопка очистки 20×20'],
+      ['field.hk.rec', tint, 'Запись (accent.tint) + обводка accent'],
+      ['field.hk.err', '#FF6B6B29', 'Конфликт (danger.tint) + обводка danger'],
+      ['tray.idle', '#2F3344FF', 'Диск значка, таймер не идёт'],
+      ['tray.ink.dark', '#14151FFF', 'Рисунок значка на красном диске'],
+      ['block.gap', '#00000000', 'Зазор 4…16, по умолчанию 6; шаг слайдера 1 px'],
+    ].map(([name, hex, use]) => ({ name, hex, use }));
+    const allAnim = [
+      kt('Перемотка: вход/выход', '120 / 150', 'Высота трека 2 ↔ 4, бегунок ⌀0 ↔ 8.'),
+      kt('Перемотка: захват', '80', 'Бегунок ⌀8 → 10.'),
+      kt('Подпись времени', '120 / 800+150', 'Кросс-фейд при захвате; после отпускания пауза 800, затем кросс-фейд 150.'),
+      kt('Клик-перемотка', '150', 'Бегунок и заливка доезжают до точки клика.'),
+      kt('Бегущая строка: проезд', 'd ÷ 30 px/с', 'Линейно. Паузы 1200 (начало) и 1000 (конец).'),
+      kt('Бегущая строка: возврат', '300', 'Обе строки в 0.'),
+      kt('Растворение краёв', '120', 'Альфа маски 0 ↔ 1, отдельно слева и справа.'),
+      kt('Смена вкладки', '150', 'Подложка вкладки едет по x на 80,5 px за шаг (78,5 + 2).'),
+      kt('Поле: в запись', '120', 'Заливка и обводка → accent.tint / accent.'),
+      kt('Точка записи', '1000, цикл', 'Альфа 1 ↔ 0,35 по синусу. Без кривой.'),
+      kt('Строка подсказки / конфликта', '180 / 150', 'Высота 0 → 24 и альфа 0 → 1; скрытие 24 → 0.'),
+      kt('Конфликт с системой', '2500 + 150', 'Держится 2500 мс, затем возврат цвета и сворачивание строки.'),
+      kt('Слайдер зазора', '0', 'Блоки переставляются сразу при перетаскивании, без твина.'),
+    ];
+    return {
+      accent: a, tint, seek, seekSpec, seekAnim, marquee, marqueeSpec, menus,
+      swatches: ['#6478FF', '#9184D9', '#3FB8AF', '#5BBF6A', '#E0A84F', '#E3735E', '#D96BA8', '#8A93A8'].map(c => ({ c, ring: c.toLowerCase() === a.toLowerCase() ? '0 0 0 2px #1C1E2B, 0 0 0 4px ' + c : 'none' })),
+      musicToggles: [tg('Плашка «Сейчас играет»', true, 0), tg('Скрывать, когда ничего не играет', true, 1), tg('Пауза музыки при будильнике', true, 1), tg('Продолжать со стартом фокуса', false, 1)],
+      hkRows, hkStates, hkSpec, trayRows, trayMenu, traySpec, tokens, allAnim,
+      budget: [
+        { a: 'Отступ сверху + трек вкладок + 12', o: '59', s: '59' },
+        { a: 'Опции: Акцент (14+8+24)', o: '46', s: '—' },
+        { a: 'Опции: Будильник (14+4+32×3)', o: '114', s: '—' },
+        { a: 'Опции: Окно и музыка (14+4+32×6)', o: '210', s: '—' },
+        { a: 'Система: Горячие клавиши (32+30×8+4+28)', o: '—', s: '304' },
+        { a: 'Система: Трей (14+4+32×2)', o: '—', s: '82' },
+        { a: 'Система: Данные (14+4+32)', o: '—', s: '50' },
+        { a: 'Зазоры между группами 12', o: '24', s: '24' },
+        { a: 'Отступ снизу + обводка', o: '12', s: '12' },
+        { a: 'Итого (меню 540)', o: '465', s: '531' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

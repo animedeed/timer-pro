@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+</helmet>
+<sc-if value="{{ isIdle }}" hint-placeholder-val="{{ false }}">
+  <div style="width:350px;height:32px;box-sizing:border-box;background:#1C1E2B;border-radius:14px;border:1px solid #FFFFFF0F;display:flex;align-items:center;gap:8px;padding:0 11px;font-family:Inter,sans-serif;color:#6A6E80;">
+    <i class="ph ph-music-notes-simple" style="font-size:14px;"></i>
+    <span style="font-size:12px;line-height:16px;flex:1;">Ничего не играет</span>
+  </div>
+</sc-if>
+<sc-if value="{{ isFull }}" hint-placeholder-val="{{ true }}">
+  <div style="position:relative;width:350px;height:56px;box-sizing:border-box;background:#1C1E2B;border-radius:14px;border:1px solid #FFFFFF0F;display:flex;align-items:center;gap:10px;padding:0 7px 0 7px;font-family:Inter,sans-serif;color:#E9E9ED;">
+    <sc-if value="{{ hasCover }}" hint-placeholder-val="{{ true }}">
+      <div style="width:40px;height:40px;border-radius:8px;background:{{ coverColor }};flex:none;overflow:hidden;display:flex;align-items:flex-end;">
+        <div style="width:40px;height:16px;background:#00000033;"></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noCover }}" hint-placeholder-val="{{ false }}">
+      <div style="width:40px;height:40px;border-radius:8px;background:#262938;color:#6A6E80;flex:none;display:flex;align-items:center;justify-content:center;"><i class="ph ph-music-note" style="font-size:18px;"></i></div>
+    </sc-if>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+      <div style="font-size:13px;line-height:18px;font-weight:500;color:{{ titleColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ title }}</div>
+      <div style="font-size:11px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9397AB;">{{ artist }}<span style="color:#6A6E80;"> · {{ source }}</span></div>
+    </div>
+    <div style="display:flex;gap:2px;flex:none;align-items:center;">
+      <div style="width:28px;height:32px;border-radius:8px;color:{{ prevColor }};display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-back" style="font-size:16px;"></i></div>
+      <div style="width:32px;height:32px;border-radius:8px;background:{{ playBg }};color:{{ playColor }};display:flex;align-items:center;justify-content:center;"><i class="{{ playIcon }}" style="font-size:16px;"></i></div>
+      <div style="width:28px;height:32px;border-radius:8px;color:{{ nextColor }};display:flex;align-items:center;justify-content:center;"><i class="ph-fill ph-skip-forward" style="font-size:16px;"></i></div>
+    </div>
+    <sc-if value="{{ hasProgress }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;left:13px;right:13px;bottom:3px;height:2px;border-radius:1px;background:#FFFFFF14;overflow:hidden;">
+        <div style="height:2px;width:{{ progressW }};background:{{ progressColor }};border-radius:1px;"></div>
+      </div>
+    </sc-if>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:350,&quot;height&quot;:56},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#6478FF&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;playing&quot;,&quot;paused&quot;,&quot;idle&quot;],&quot;default&quot;:&quot;playing&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cover&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;coverColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#5A4A7A&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Тёплое место&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;artist&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Мумий Тролль&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;source&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Яндекс Музыка&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;canPrev&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;canNext&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;progress&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.38,&quot;min&quot;:-1,&quot;max&quot;:1,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, a = p.accent ?? '#6478FF', st = p.state ?? 'playing';
+    const playing = st === 'playing', cover = p.cover ?? true, prog = p.progress ?? 0.38;
+    return {
+      isIdle: st === 'idle', isFull: st !== 'idle',
+      hasCover: cover, noCover: !cover, coverColor: p.coverColor ?? '#5A4A7A',
+      title: p.title ?? 'Тёплое место', artist: p.artist ?? 'Мумий Тролль', source: p.source ?? 'Яндекс Музыка',
+      titleColor: playing ? '#E9E9ED' : '#9397AB',
+      prevColor: (p.canPrev ?? true) ? '#9397AB' : '#464A5A',
+      nextColor: (p.canNext ?? true) ? '#9397AB' : '#464A5A',
+      playIcon: playing ? 'ph-fill ph-pause' : 'ph-fill ph-play',
+      playBg: playing ? a + '3D' : '#262938', playColor: playing ? a : '#E9E9ED',
+      hasProgress: prog >= 0, progressW: Math.round(Math.max(prog, 0) * 100) + '%',
+      progressColor: playing ? a : '#6A6E80',
+    };
+  }
+}
+</script>
+</body>
+</html>

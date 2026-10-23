@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>body{margin:0;background:#11121A;color:#E9E9ED;font-family:Inter,sans-serif;}a{color:#9184D9;}a:hover{color:#B5ABFC;}</style>
+</helmet>
+<div style="padding:64px;display:flex;flex-direction:column;gap:64px;width:2380px;box-sizing:border-box;background:#11121A;color:#E9E9ED;font-family:Inter,sans-serif;">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:900px;">
+    <span style="font-size:13px;color:#6A6E80;letter-spacing:0.6px;text-transform:uppercase;font-weight:500;">Timer Pro · редизайн · eframe/egui 0.27</span>
+    <h1 style="margin:0;font-size:42px;line-height:48px;font-weight:500;letter-spacing:-0.6px;">Макеты 1x и спецификация</h1>
+    <p style="margin:0;font-size:15px;line-height:22px;color:#9397AB;text-wrap:pretty;">Ширина окна 350 px. Блоки парят отдельно, между ними прозрачный зазор 10 px (здесь он показан цветом «рабочего стола»). Все размеры указаны в логических пикселях при масштабе 1x. Акцент можно переключить в панели Tweaks, чтобы проверить макеты с другим цветом.</p>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">1. Свёрнутый виджет · 350×64</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">1a · таймер идёт</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Widget" accent="{{ accent }}" state="running" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">1b · секундомер на паузе</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Widget" accent="{{ accent }}" state="paused" mode="stopwatch" label="Отчёт для клиента" time="01:12:05" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">1c · пусто: нет закреплённого таймера</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Widget" accent="{{ accent }}" state="idle" time="00:00:00" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">1d · звонит будильник (обводка пульсирует)</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Widget" accent="{{ accent }}" state="ringing" time="00:00:00" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">1e · истёк, будильник заглушен</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Widget" accent="{{ accent }}" state="expired" time="00:00:00" label="Время вышло · Фокус" hint-size="350px,64px"></dc-import></div></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">2. Виджет с музыкальной плашкой</h2>
+    <p style="margin:0;font-size:14px;line-height:20px;color:#9397AB;max-width:900px;">Правило одно: всё растёт в сторону, где у края экрана есть место. Порядок от виджета: виджет → плашка → меню. Если окно у нижнего края, вся стопка зеркалится: плашка оказывается над виджетом, меню над плашкой. Виджет при открытии меню не сдвигается.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">2a · растёт вниз · 350×130</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="running" hint-size="350px,64px"></dc-import><dc-import name="Music" accent="{{ accent }}" state="playing" hint-size="350px,56px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">2b · у нижнего края: растёт вверх</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Music" accent="{{ accent }}" state="playing" hint-size="350px,56px"></dc-import><dc-import name="Widget" accent="{{ accent }}" state="running" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">2c · ничего не играет · мини-плашка 32 px (если «Скрывать» выключено)</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="paused" time="00:25:00" hint-size="350px,64px"></dc-import><dc-import name="Music" accent="{{ accent }}" state="idle" hint-size="350px,32px"></dc-import></div></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">3. Меню · 350×520, раскрыто вниз</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">3a · Таймеры</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" hint-size="350px,64px"></dc-import><dc-import name="Music" accent="{{ accent }}" state="playing" hint-size="350px,56px"></dc-import><dc-import name="Menu" accent="{{ accent }}" tab="timers" variant="full" hint-size="350px,520px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">3b · Таймеры: 0 (без плашки)</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="idle" time="00:00:00" menu-open="{{ true }}" hint-size="350px,64px"></dc-import><dc-import name="Menu" accent="{{ accent }}" tab="timers" variant="empty" hint-size="350px,520px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">3c · Таймеры: 10, список прокручивается</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" hint-size="350px,64px"></dc-import><dc-import name="Menu" accent="{{ accent }}" tab="timers" variant="many" hint-size="350px,520px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">3d · История</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" hint-size="350px,64px"></dc-import><dc-import name="Menu" accent="{{ accent }}" tab="history" variant="full" hint-size="350px,520px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">3e · История: нет записей</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" hint-size="350px,64px"></dc-import><dc-import name="Menu" accent="{{ accent }}" tab="history" variant="empty" hint-size="350px,520px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">3f · Опции</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" hint-size="350px,64px"></dc-import><dc-import name="Menu" accent="{{ accent }}" tab="options" hint-size="350px,520px"></dc-import></div></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">4. Меню раскрыто вверх · звонящий будильник</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-end;">
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">4a · вверх, с плашкой · окно 350×670</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Menu" accent="{{ accent }}" tab="timers" variant="full" hint-size="350px,520px"></dc-import><dc-import name="Music" accent="{{ accent }}" state="playing" hint-size="350px,56px"></dc-import><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" menu-up="{{ true }}" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">4b · вверх, без плашки · окно 350×594</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Menu" accent="{{ accent }}" tab="history" variant="full" hint-size="350px,520px"></dc-import><dc-import name="Widget" accent="{{ accent }}" state="running" time="00:18:42" menu-open="{{ true }}" menu-up="{{ true }}" hint-size="350px,64px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">4c · будильник: музыка на паузе автоматически</span><div style="background:#4A5266;padding:20px;border-radius:4px;display:flex;flex-direction:column;gap:10px;"><dc-import name="Widget" accent="{{ accent }}" state="ringing" time="00:00:00" hint-size="350px,64px"></dc-import><dc-import name="Music" accent="{{ accent }}" state="paused" hint-size="350px,56px"></dc-import></div></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:20px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">5. Музыкальная плашка · 350×56</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">5a · играет</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Music" accent="{{ accent }}" state="playing" hint-size="350px,56px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">5b · на паузе</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Music" accent="{{ accent }}" state="paused" progress="{{ 0.62 }}" hint-size="350px,56px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">5c · без обложки, без назад/вперёд, без позиции</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Music" accent="{{ accent }}" state="playing" cover="{{ false }}" can-prev="{{ false }}" can-next="{{ false }}" progress="{{ -1 }}" title="Lo-fi beats to focus" artist="YouTube" source="Браузер" hint-size="350px,56px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">5d · длинное название</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Music" accent="{{ accent }}" state="playing" cover-color="#3F5F6E" title="Концерт для фортепиано с оркестром № 2 до минор, соч. 18: II. Adagio sostenuto" artist="Сергей Рахманинов, Денис Мацуев, Валерий Гергиев" source="Spotify" progress="{{ 0.14 }}" hint-size="350px,56px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;"><span style="font-size:12px;color:#9397AB;">5e · ничего не играет · мини 32 px</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Music" accent="{{ accent }}" state="idle" hint-size="350px,32px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:390px;"><span style="font-size:12px;color:#9397AB;">5f · скрыта (по умолчанию, когда ничего не играет, или выключена в «Опциях»)</span><div style="background:#4A5266;padding:20px;border-radius:4px;"><dc-import name="Widget" accent="{{ accent }}" state="paused" time="00:25:00" hint-size="350px,64px"></dc-import></div></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">6. Токены</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:40px;align-items:start;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Цвета · RGBA HEX</h3>
+        <sc-for list="{{ colors }}" as="c" hint-placeholder-count="20">
+          <div style="display:grid;grid-template-columns:24px 140px 100px minmax(0,1fr);gap:10px;align-items:center;min-height:28px;border-bottom:1px solid #FFFFFF0F;padding:4px 0;">
+            <span style="width:20px;height:20px;border-radius:4px;background:{{ c.hex }};box-shadow:0 0 0 1px #FFFFFF29;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ c.name }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#B2B6CA;">{{ c.hex }}</span>
+            <span style="font-size:12px;color:#9397AB;line-height:16px;">{{ c.use }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Типографика</h3>
+        <p style="margin:0 0 8px;font-size:12px;line-height:18px;color:#9397AB;">Встроить 2 TTF (OFL, с кириллицей): Inter Regular/Medium и JetBrains Mono Regular/Medium. Начертание 600+ не используется.</p>
+        <sc-for list="{{ type }}" as="t" hint-placeholder-count="10">
+          <div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:baseline;border-bottom:1px solid #FFFFFF0F;padding:6px 0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ t.name }}</span>
+            <span style="font-size:12px;color:#9397AB;line-height:16px;">{{ t.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Радиусы, отступы, тень</h3>
+        <sc-for list="{{ metrics }}" as="m" hint-placeholder-count="14">
+          <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px;align-items:baseline;border-bottom:1px solid #FFFFFF0F;padding:6px 0;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ m.name }}</span>
+            <span style="font-size:12px;color:#9397AB;line-height:16px;">{{ m.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Размеры блоков и кнопок</h3>
+        <sc-for list="{{ sizes }}" as="m" hint-placeholder-count="20">
+          <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:baseline;border-bottom:1px solid #FFFFFF0F;padding:6px 0;">
+            <span style="font-size:12px;">{{ m.name }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9397AB;line-height:16px;">{{ m.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px;">
+    <h2 style="margin:0;font-size:25px;font-weight:500;">7. Взаимодействия и анимации</h2>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;align-items:start;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Анимации · все твины ease-out cubic: 1 − (1 − t)³</h3>
+        <sc-for list="{{ anims }}" as="m" hint-placeholder-count="12">
+          <div style="display:grid;grid-template-columns:200px 70px minmax(0,1fr);gap:12px;align-items:baseline;border-bottom:1px solid #FFFFFF0F;padding:8px 0;">
+            <span style="font-size:13px;font-weight:500;">{{ m.what }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#B2B6CA;">{{ m.ms }}</span>
+            <span style="font-size:12px;color:#9397AB;line-height:17px;text-wrap:pretty;">{{ m.how }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;">Поведение</h3>
+        <sc-for list="{{ rules }}" as="m" hint-placeholder-count="12">
+          <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px;align-items:baseline;border-bottom:1px solid #FFFFFF0F;padding:8px 0;">
+            <span style="font-size:13px;font-weight:500;">{{ m.what }}</span>
+            <span style="font-size:12px;color:#9397AB;line-height:17px;text-wrap:pretty;">{{ m.how }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#6478FF&quot;,&quot;options&quot;:[&quot;#6478FF&quot;,&quot;#3FB8AF&quot;,&quot;#E0A84F&quot;,&quot;#D96BA8&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.accent ?? '#6478FF';
+    const r = (name, spec) => ({ name, spec });
+    return {
+      accent: a,
+      colors: [
+        ['gap', '#00000000', 'Зазор между блоками, фон окна'],
+        ['block.bg', '#1C1E2BFF', 'Заливка всех парящих блоков'],
+        ['block.stroke', '#FFFFFF0F', 'Обводка блока 1 px внутрь'],
+        ['surface.1', '#22242FFF', 'Строки таймеров, записи, итоги'],
+        ['surface.2', '#262938FF', 'Поля ввода, вторичные кнопки'],
+        ['surface.3', '#2F3344FF', 'Hover на surface.2, активная вкладка'],
+        ['surface.sunken', '#161824FF', 'Трек переключателя вкладок'],
+        ['line', '#FFFFFF14', 'Разделители, обводка пресетов, трек прогресса'],
+        ['text.primary', '#E9E9EDFF', 'Время, названия, значения'],
+        ['text.secondary', '#9397ABFF', 'Подписи, иконки по умолчанию'],
+        ['text.tertiary', '#6A6E80FF', 'Плейсхолдеры, заголовки групп'],
+        ['text.disabled', '#464A5AFF', 'Неактивные иконки, ручка'],
+        ['knob', '#F5F6FAFF', 'Бегунки слайдера и переключателя'],
+        ['toggle.off', '#3A3D4DFF', 'Трек выключенного переключателя и слайдера'],
+        ['danger', '#FF6B6BFF', 'Истёкшее время, будильник, удаление'],
+        ['danger.tint', '#FF6B6B29', 'Фон кнопки «Тихо», hover удаления'],
+        ['danger.stroke', '#FF6B6B66', 'Обводка виджета при звонке (пульс 66→CC)'],
+        ['accent', a + 'FF', 'Выбор пользователя. Обводки, иконки, выбранный день'],
+        ['accent.tint', a + '3D', 'Фон активной кнопки (play, меню открыто)'],
+        ['on.accent', '#F5F6FAFF', 'Текст на заливке акцентом; #14151F, если контраст выше'],
+        ['shadow', '#00000073', 'Тень блоков'],
+      ].map(([name, hex, use]) => ({ name, hex, use })),
+      type: [
+        r('time.xl', 'JetBrains Mono Medium 26 / 30, время в виджете'),
+        r('time.lg', 'JetBrains Mono Medium 22 / 26, поля Ч/М/С'),
+        r('time.md', 'JetBrains Mono Medium 15 / 20, время в строке таймера'),
+        r('time.sm', 'JetBrains Mono Regular 12 / 16, длительности, проценты'),
+        r('title', 'Inter Medium 15 / 20, месяц, суммы в итогах'),
+        r('body', 'Inter Medium 13 / 18, названия, кнопки, вкладки'),
+        r('body.reg', 'Inter Regular 13 / 18, поля ввода, строки опций'),
+        r('caption', 'Inter Regular 12 / 16, подписи, заметки, пресеты'),
+        r('small', 'Inter Regular 11 / 14, метка в виджете, исполнитель'),
+        r('overline', 'Inter Medium 11 / 14, ВЕРХНИЙ РЕГИСТР, extra_letter_spacing 0.6'),
+        r('micro', 'Inter Regular 10 / 12, «ч / мин / сек» под полями'),
+        r('icons', 'Phosphor (egui-phosphor), Regular и Fill; 20 в виджете, 16 в меню, 14 в строках'),
+      ],
+      metrics: [
+        r('radius.block', '14: виджет, плашка, меню'),
+        r('radius.btn.lg', '10: кнопки 40×40, «Тихо», трек вкладок'),
+        r('radius.ctrl', '8: кнопки 28/32, поля, строки, ячейки, обложка'),
+        r('radius.chip', '6: пресеты, кнопка удаления записи'),
+        r('radius.toggle', '9 (трек), 7 (бегунок)'),
+        r('space.1', '4: между иконками-кнопками, в строке'),
+        r('space.2', '8: между полями, элементами виджета'),
+        r('space.3', '12: внутренний отступ блока, между группами'),
+        r('block.gap', '10: прозрачный зазор между блоками'),
+        r('block.padding', '12 по контуру (11 + 1 обводка); виджет слева 8'),
+        r('row.gap', '4: между строками таймеров и записями'),
+        r('stroke', '1 px внутрь; фокус поля — 1 px accent'),
+        r('shadow', 'нет (отменена в v2)'),
+        r('disabled', 'opacity 0.45 (кнопки), иконки text.disabled'),
+      ],
+      sizes: [
+        r('Окно', 'ширина 350; высота = сумма блоков + 10 × (n − 1)'),
+        r('Виджет', '350×64'),
+        r('Плашка / мини', '350×56 / 350×32'),
+        r('Меню', '350×520'),
+        r('Ручка', '12×24, сетка 2×3 точки 3×3, шаг 3/4'),
+        r('Play / Stop / Меню', '40×40, иконка 20'),
+        r('Закрыть', '28×28, иконка 16; разделитель 1×24'),
+        r('«Тихо»', '84×40 (заменяет Play+Stop: 40+4+40)'),
+        r('Плашка: обложка', '40×40, отступ слева 8'),
+        r('Плашка: кнопки', 'назад/вперёд 28×32, play 32×32, иконка 16'),
+        r('Плашка: прогресс', 'высота 2, отступ 14 слева/справа, 4 снизу'),
+        r('Вкладки', 'трек 326×36, padding 3, вкладка ×30'),
+        r('Поле имени', '326×36'),
+        r('Поля Ч/М/С', '3 × 100.67×52, разделитель «:» 12'),
+        r('Пресет', '(326 − 18) / 4 = 77×28'),
+        r('+ Таймер / + Секундомер', '159×36, gap 8'),
+        r('Строка таймера', '326×44; кнопки 28×28, иконка 14'),
+        r('Ячейка календаря', '44×30, gap 3; точка 4×4 на 4 от низа'),
+        r('Итоги', '2 × 159×44'),
+        r('Запись', '326×(24+2+20+12) = 58'),
+        r('Переключатель', '32×18, бегунок 14, ход 14'),
+        r('Свотч акцента', '24×24, gap 10; выбран: кольцо 2 + зазор 2'),
+      ],
+      anims: [
+        { what: 'Открытие меню', ms: '200 мс', how: 'Окно сразу ресайзится до полной высоты (прозрачно). Блок меню: alpha 0→1 и сдвиг 8→0 px от виджета. Закрытие: 150 мс, затем ресайз окна.' },
+        { what: 'Появление плашки', ms: '200 мс', how: 'Ресайз окна, затем alpha 0→1 и сдвиг 6→0. Скрытие: 150 мс, alpha 1→0, затем ресайз.' },
+        { what: 'Плашка ↔ мини', ms: '180 мс', how: 'Высота содержимого 56↔32 внутри блока, текст кросс-фейдом.' },
+        { what: 'Смена вкладки', ms: '150 мс', how: 'Подложка активной вкладки едет по x. Контент: alpha 0→1, сдвиг 4→0.' },
+        { what: 'Hover кнопки', ms: '120 мс', how: 'Цвет заливки transparent→surface.2 (или surface.2→surface.3), иконка secondary→primary.' },
+        { what: 'Нажатие', ms: '80 мс', how: 'Заливка затемняется: tint 3D→52. Без изменения размеров.' },
+        { what: 'Звонок будильника', ms: '1000 мс', how: 'Альфа обводки danger.stroke 66↔CC по синусу, цикл, пока не нажато «Тихо».' },
+        { what: 'Добавление строки', ms: '180 мс', how: 'Высота 0→44 и alpha 0→1. Удаление: alpha 1→0 за 120 мс, затем высота 44→0 за 150 мс.' },
+        { what: 'Переключатель', ms: '150 мс', how: 'Бегунок по x 2→16, цвет трека toggle.off→accent.' },
+        { what: 'Перетаскивание Ч/М/С', ms: '—', how: 'Шаг 1 на каждые 8 px по вертикали; вверх — больше. Без анимации, обновление сразу.' },
+        { what: 'Прогресс трека', ms: '250 мс', how: 'Ширина заливки твинится к новой позиции, обновление раз в 1 с.' },
+      ],
+      rules: [
+        { what: 'Направление', how: 'Если от верха виджета до нижнего края экрана меньше высоты раскрытой стопки, растём вверх: окно сдвигается вверх так, чтобы виджет остался на месте.' },
+        { what: 'Перетаскивание', how: 'Окно тянется за любую точку виджета или плашки, кроме кнопок. Курсор grab, при зажатии grabbing.' },
+        { what: 'Поля Ч/М/С', how: 'Клик ставит фокус (обводка accent), ввод с клавиатуры, Tab — следующее поле. Перетаскивание по вертикали прокручивает значение. Колесо мыши: ±1.' },
+        { what: 'Пресеты', how: 'Клик сразу создаёт и запускает таймер с этим временем (имя «Фокус 25» и т. д.).' },
+        { what: 'Закрепление', how: 'Закреплён один таймер: он показывается в виджете. Иконка pin Fill + accent.' },
+        { what: 'Stop / удалить', how: 'Stop останавливает и пишет в историю. Корзина удаляет без записи, при hover становится danger.' },
+        { what: 'Список таймеров', how: 'Блок не меняет высоту: список заполняет остаток до низа меню. При 0 — пустое состояние по центру. При переполнении — прокрутка, полоса 3 px #FFFFFF29.' },
+        { what: 'Заметка', how: 'Однострочное поле без рамки; рамка surface.2 появляется при фокусе. Enter или потеря фокуса — сохранить.' },
+        { what: 'Плашка: источник', how: 'Сессия Windows GlobalSystemMediaTransportControls, текущая. Кнопки, которые источник не поддерживает, рисуются text.disabled и не реагируют на клик.' },
+        { what: 'Плашка: ничего не играет', how: 'По умолчанию через 3 с без сессии плашка скрывается. Если «Скрывать» выключено — мини 32 px.' },
+        { what: 'Связь с таймером', how: 'При звонке будильника музыка ставится на паузу (если играла). При «Тихо» или старте следующего фокус-таймера — продолжается, если включено «Продолжать со стартом фокуса». Перерыв (таймер ≤ 15 мин из пресетов) музыку не трогает.' },
+        { what: 'Акцент', how: 'Все оттенки акцента — альфа поверх block.bg, поэтому подходит любой цвет. Текст на заливке акцентом: выбирается #F5F6FA или #14151F по большему контрасту WCAG.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

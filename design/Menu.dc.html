@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+</helmet>
+<div style="width:350px;height:520px;box-sizing:border-box;background:#1C1E2B;border-radius:14px;border:1px solid #FFFFFF0F;display:flex;flex-direction:column;font-family:Inter,sans-serif;color:#E9E9ED;overflow:hidden;">
+  <div style="padding:11px 11px 12px;flex:none;">
+    <div style="height:36px;box-sizing:border-box;background:#161824;border-radius:10px;padding:3px;display:flex;gap:2px;">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+        <div style="flex:1;height:30px;border-radius:8px;background:{{ t.bg }};color:{{ t.color }};display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;"><i class="{{ t.icon }}" style="font-size:16px;"></i>{{ t.label }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{ isTimers }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 11px 11px;">
+      <div style="display:flex;flex-direction:column;gap:8px;flex:none;">
+        <div style="height:36px;box-sizing:border-box;background:#262938;border:1px solid #FFFFFF0F;border-radius:8px;padding:0 11px;display:flex;align-items:center;font-size:13px;color:#6A6E80;">Название (необязательно)</div>
+        <div style="display:flex;align-items:center;">
+          <sc-for list="{{ hms }}" as="f" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;flex:1;">
+              <div style="flex:1;height:52px;box-sizing:border-box;background:#262938;border:1px solid {{ f.border }};border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:ns-resize;">
+                <span style="font-family:'JetBrains Mono',monospace;font-weight:500;font-size:22px;line-height:26px;color:{{ f.color }};">{{ f.value }}</span>
+                <span style="font-size:10px;line-height:12px;color:#6A6E80;">{{ f.unit }}</span>
+              </div>
+              <span style="width:12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:18px;color:#464A5A;display:{{ f.sep }};">:</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <sc-for list="{{ presets }}" as="p" hint-placeholder-count="4">
+            <div style="flex:1;height:28px;box-sizing:border-box;border:1px solid #FFFFFF14;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9397AB;cursor:pointer;" style-hover="background:#262938;color:#E9E9ED;">{{ p }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;height:36px;box-sizing:border-box;border:1px solid {{ accent }};color:{{ accent }};border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;"><i class="ph ph-plus" style="font-size:16px;"></i>Таймер</div>
+          <div style="flex:1;height:36px;box-sizing:border-box;background:#262938;color:#E9E9ED;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;"><i class="ph ph-plus" style="font-size:16px;"></i>Секундомер</div>
+        </div>
+      </div>
+      <div style="height:28px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex:none;">
+        <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Активные · {{ count }}</span>
+      </div>
+      <sc-if value="{{ hasTimers }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;flex:1;min-height:0;overflow:hidden;">
+          <div style="display:flex;flex-direction:column;gap:4px;padding-right:{{ listPad }};">
+            <sc-for list="{{ timers }}" as="r" hint-placeholder-count="3">
+              <div style="height:44px;flex:none;border-radius:8px;background:#22242F;display:flex;align-items:center;gap:4px;padding:0 4px;">
+                <div style="width:28px;height:28px;border-radius:8px;color:{{ r.pinColor }};display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="{{ r.pinIcon }}" style="font-size:16px;"></i></div>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:0;">
+                  <div style="display:flex;align-items:center;gap:4px;color:#9397AB;"><i class="{{ r.modeIcon }}" style="font-size:11px;"></i><span style="font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</span></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-weight:500;font-size:15px;line-height:20px;color:{{ r.timeColor }};">{{ r.time }}</span>
+                </div>
+                <div style="width:28px;height:28px;border-radius:8px;background:{{ r.playBg }};color:{{ r.playColor }};display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="{{ r.playIcon }}" style="font-size:14px;"></i></div>
+                <div style="width:28px;height:28px;border-radius:8px;color:#9397AB;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Остановить и записать в историю"><i class="ph-fill ph-stop" style="font-size:14px;"></i></div>
+                <div style="width:28px;height:28px;border-radius:8px;color:#6A6E80;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Удалить без записи" style-hover="color:#FF6B6B;background:#FF6B6B29;"><i class="ph ph-trash" style="font-size:14px;"></i></div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isMany }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;right:0;top:0;width:3px;height:96px;border-radius:2px;background:#FFFFFF29;"></div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noTimers }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;">
+          <div style="width:48px;height:48px;border-radius:24px;background:#22242F;color:#6A6E80;display:flex;align-items:center;justify-content:center;"><i class="ph ph-hourglass-medium" style="font-size:24px;"></i></div>
+          <div style="font-size:13px;line-height:18px;font-weight:500;color:#E9E9ED;">Нет таймеров</div>
+          <div style="font-size:12px;line-height:16px;color:#6A6E80;max-width:220px;">Задайте время выше или выберите пресет — таймер появится здесь</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 11px 11px;">
+      <div style="height:28px;display:flex;align-items:center;justify-content:space-between;flex:none;">
+        <span style="font-size:15px;line-height:20px;font-weight:500;">Октябрь 2026</span>
+        <div style="display:flex;gap:4px;">
+          <div style="width:28px;height:28px;border-radius:8px;color:#9397AB;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="background:#262938;color:#E9E9ED;"><i class="ph ph-caret-left" style="font-size:16px;"></i></div>
+          <div style="width:28px;height:28px;border-radius:8px;color:#9397AB;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="background:#262938;color:#E9E9ED;"><i class="ph ph-caret-right" style="font-size:16px;"></i></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,44px);column-gap:3px;margin-top:8px;flex:none;">
+        <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
+          <div style="height:20px;font-size:11px;line-height:20px;text-align:center;color:#6A6E80;">{{ w }}</div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,44px);grid-auto-rows:30px;gap:3px;margin-top:4px;flex:none;">
+        <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+          <div style="position:relative;box-sizing:border-box;border-radius:8px;background:{{ c.bg }};border:1px solid {{ c.border }};color:{{ c.color }};font-size:13px;font-weight:{{ c.weight }};font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center;padding-bottom:4px;cursor:pointer;">
+            {{ c.label }}
+            <span style="position:absolute;left:19px;bottom:4px;width:4px;height:4px;border-radius:2px;background:{{ c.dot }};"></span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex:none;">
+        <div style="flex:1;height:44px;box-sizing:border-box;border-radius:8px;background:#22242F;padding:0 11px;display:flex;flex-direction:column;justify-content:center;gap:2px;">
+          <span style="font-size:11px;line-height:14px;color:#6A6E80;">За {{ dayLabel }}</span>
+          <span style="font-size:15px;line-height:20px;font-weight:500;">{{ dayTotal }}</span>
+        </div>
+        <div style="flex:1;height:44px;box-sizing:border-box;border-radius:8px;background:#22242F;padding:0 11px;display:flex;flex-direction:column;justify-content:center;gap:2px;">
+          <span style="font-size:11px;line-height:14px;color:#6A6E80;">За октябрь</span>
+          <span style="font-size:15px;line-height:20px;font-weight:500;">41 ч 30 мин</span>
+        </div>
+      </div>
+      <div style="height:28px;margin-top:8px;display:flex;align-items:center;flex:none;">
+        <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Записи · {{ entryCount }}</span>
+      </div>
+      <sc-if value="{{ hasEntries }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px;">
+          <sc-for list="{{ entries }}" as="e" hint-placeholder-count="3">
+            <div style="flex:none;border-radius:8px;background:#22242F;padding:6px 4px 6px 11px;display:flex;flex-direction:column;gap:2px;">
+              <div style="height:24px;display:flex;align-items:center;gap:8px;">
+                <span style="flex:1;min-width:0;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ e.name }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:#9397AB;">{{ e.dur }}</span>
+                <div style="width:24px;height:24px;border-radius:6px;color:#6A6E80;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="color:#FF6B6B;background:#FF6B6B29;"><i class="ph ph-trash" style="font-size:14px;"></i></div>
+              </div>
+              <div style="height:20px;display:flex;align-items:center;gap:6px;color:{{ e.noteColor }};font-size:12px;line-height:16px;cursor:text;"><i class="ph ph-note-pencil" style="font-size:12px;"></i>{{ e.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noEntries }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;">
+          <i class="ph ph-calendar-x" style="font-size:24px;color:#6A6E80;"></i>
+          <div style="font-size:13px;line-height:18px;font-weight:500;">Нет записей за {{ dayLabel }}</div>
+          <div style="font-size:12px;line-height:16px;color:#6A6E80;">Остановите таймер кнопкой ■, чтобы записать сессию</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOptions }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:0 11px 11px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Акцент</span>
+        <div style="display:flex;gap:10px;padding-left:2px;">
+          <sc-for list="{{ swatches }}" as="s" hint-placeholder-count="8">
+            <div style="width:24px;height:24px;border-radius:12px;background:{{ s.c }};box-shadow:{{ s.ring }};cursor:pointer;"></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Будильник</span>
+        <div style="height:32px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:13px;width:72px;">Громкость</span>
+          <div style="flex:1;position:relative;height:16px;display:flex;align-items:center;">
+            <div style="width:100%;height:4px;border-radius:2px;background:#3A3D4D;"></div>
+            <div style="position:absolute;left:0;width:70%;height:4px;border-radius:2px;background:{{ accent }};"></div>
+            <div style="position:absolute;left:calc(70% - 7px);width:14px;height:14px;border-radius:7px;background:#F5F6FA;"></div>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9397AB;width:32px;text-align:right;">70%</span>
+        </div>
+        <div style="height:32px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:13px;width:72px;flex:none;">Звук</span>
+          <span style="flex:1;min-width:0;font-size:12px;color:#9397AB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Встроенный</span>
+          <div style="height:28px;padding:0 10px;border-radius:8px;background:#262938;font-size:12px;font-weight:500;display:flex;align-items:center;cursor:pointer;">Выбрать…</div>
+          <div style="width:28px;height:28px;border-radius:8px;background:#262938;color:#9397AB;opacity:0.45;display:flex;align-items:center;justify-content:center;" title="Вернуть встроенный"><i class="ph ph-arrow-counter-clockwise" style="font-size:14px;"></i></div>
+          <div style="width:28px;height:28px;border-radius:8px;background:{{ accentTint }};color:{{ accent }};display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Тест звука"><i class="ph-fill ph-play" style="font-size:14px;"></i></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;margin-bottom:4px;">Окно и музыка</span>
+        <sc-for list="{{ toggles }}" as="g" hint-placeholder-count="5">
+          <div style="height:32px;display:flex;align-items:center;gap:12px;padding-left:{{ g.indent }};cursor:pointer;">
+            <span style="flex:1;font-size:13px;color:{{ g.text }};">{{ g.label }}</span>
+            <div style="position:relative;width:32px;height:18px;border-radius:9px;background:{{ g.track }};flex:none;">
+              <div style="position:absolute;top:2px;left:{{ g.knobX }};width:14px;height:14px;border-radius:7px;background:{{ g.knob }};"></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;color:#6A6E80;">Данные</span>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;min-width:0;height:32px;box-sizing:border-box;background:#262938;border:1px solid #FFFFFF0F;border-radius:8px;padding:0 10px;display:flex;align-items:center;gap:6px;color:#9397AB;font-size:12px;"><i class="ph ph-folder" style="font-size:14px;flex:none;"></i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">C:\Users\anna\AppData\Roaming\TimerPro</span></div>
+          <div style="height:32px;padding:0 10px;border-radius:8px;background:#262938;font-size:12px;font-weight:500;display:flex;align-items:center;cursor:pointer;">Изменить</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:350,&quot;height&quot;:520},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#6478FF&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;timers&quot;,&quot;history&quot;,&quot;options&quot;],&quot;default&quot;:&quot;timers&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;empty&quot;,&quot;many&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, a = p.accent ?? '#6478FF', tab = p.tab ?? 'timers', v = p.variant ?? 'full';
+    const tint = a + '3D';
+    const hexL = h => { const n = parseInt(h.slice(1, 7), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const onAccent = (1.05 / (hexL(a) + 0.05)) > ((hexL(a) + 0.05) / (hexL('#14151F') + 0.05)) ? '#F5F6FA' : '#14151F';
+    const tabs = [['timers', 'Таймеры', 'ph ph-hourglass-medium'], ['history', 'История', 'ph ph-calendar-blank'], ['options', 'Опции', 'ph ph-gear-six']]
+      .map(([k, label, icon]) => ({ label, icon, bg: k === tab ? '#2F3344' : 'transparent', color: k === tab ? '#E9E9ED' : '#9397AB' }));
+    const base = [
+      { name: 'Фокус', time: '00:18:42', pin: true, st: 'run', mode: 't' },
+      { name: 'Отчёт для клиента — квартальная сверка', time: '01:12:05', st: 'pause', mode: 's' },
+      { name: 'Перерыв', time: '00:05:00', st: 'idle', mode: 't' },
+      { name: 'Чай', time: '00:00:00', st: 'exp', mode: 't' },
+    ];
+    const extra = ['Созвон', 'Код-ревью', 'Почта', 'Чтение', 'Планирование', 'Зарядка'].map((n, i) => ({ name: n, time: ['00:30:00', '00:45:00', '00:15:00', '00:25:00', '00:10:00', '00:07:30'][i], st: 'idle', mode: 't' }));
+    const list = v === 'empty' ? [] : v === 'many' ? base.concat(extra) : base.slice(0, 3);
+    const timers = list.map(r => ({
+      name: r.name, time: r.time,
+      modeIcon: r.mode === 's' ? 'ph ph-timer' : 'ph ph-hourglass-medium',
+      pinIcon: r.pin ? 'ph-fill ph-push-pin' : 'ph ph-push-pin', pinColor: r.pin ? a : '#6A6E80',
+      playIcon: r.st === 'run' ? 'ph-fill ph-pause' : 'ph-fill ph-play',
+      playBg: r.st === 'run' ? tint : '#262938', playColor: r.st === 'run' ? a : '#E9E9ED',
+      timeColor: r.st === 'exp' ? '#FF6B6B' : '#E9E9ED',
+    }));
+    const hms = [['00', 'ч'], ['25', 'мин'], ['00', 'сек']].map(([value, unit], i) => ({ value, unit, sep: i < 2 ? 'block' : 'none', border: i === 1 ? a : '#FFFFFF0F', color: i === 1 ? '#E9E9ED' : '#9397AB' }));
+    const today = 22, sel = v === 'empty' ? 25 : 20, rec = [1, 2, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 19, 20, 21, 22];
+    const cells = [];
+    for (let i = 0; i < 35; i++) {
+      const d = i - 2; const ok = d >= 1 && d <= 31; const s = d === sel, t = d === today;
+      cells.push({ label: ok ? String(d) : '', bg: s ? a : 'transparent', border: t && !s ? a : 'transparent',
+        color: s ? onAccent : d > today ? '#6A6E80' : '#E9E9ED', weight: s || t ? 500 : 400,
+        dot: ok && rec.includes(d) ? (s ? onAccent : a) : 'transparent' });
+    }
+    const entries = v === 'empty' ? [] : [
+      { name: 'Фокус', dur: '00:25:00', note: 'Черновик спецификации виджета', noteColor: '#9397AB' },
+      { name: 'Отчёт для клиента — квартальная сверка', dur: '01:12:05', note: 'Заметка', noteColor: '#464A5A' },
+      { name: 'Фокус', dur: '00:25:00', note: 'Заметка', noteColor: '#464A5A' },
+    ];
+    const sw = ['#6478FF', '#9184D9', '#3FB8AF', '#5BBF6A', '#E0A84F', '#E3735E', '#D96BA8', '#8A93A8'];
+    const tg = [['Поверх всех окон', true, 0], ['Плашка «Сейчас играет»', true, 0], ['Скрывать, когда ничего не играет', true, 1], ['Пауза музыки при будильнике', true, 1], ['Продолжать со стартом фокуса', false, 1]];
+    return {
+      accent: a, accentTint: tint, tabs,
+      isTimers: tab === 'timers', isHistory: tab === 'history', isOptions: tab === 'options',
+      hms, presets: ['25 мин', '5 мин', '15 мин', '45 мин'],
+      timers, count: timers.length, hasTimers: timers.length > 0, noTimers: timers.length === 0,
+      isMany: v === 'many', listPad: v === 'many' ? '7px' : '0px',
+      weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], cells,
+      dayLabel: sel + ' октября', dayTotal: v === 'empty' ? '0 мин' : '2 ч 02 мин',
+      entries, entryCount: entries.length, hasEntries: entries.length > 0, noEntries: entries.length === 0,
+      swatches: sw.map(c => ({ c, ring: c.toLowerCase() === a.toLowerCase() ? '0 0 0 2px #1C1E2B, 0 0 0 4px ' + c : 'none' })),
+      toggles: tg.map(([label, on, ind]) => ({ label, indent: ind ? '12px' : '0px', text: ind ? '#9397AB' : '#E9E9ED', track: on ? a : '#3A3D4D', knob: on ? '#F5F6FA' : '#9397AB', knobX: on ? '16px' : '2px' })),
+    };
+  }
+}
+</script>
+</body>
+</html>
