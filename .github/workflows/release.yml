@@ -1,0 +1,47 @@
+# Сборка установщика и публикация релиза.
+# Запускается отправкой тега версии: git tag v0.3.0 && git push origin v0.3.0
+# Описание релиза берётся из .github/release-notes/<тег>.md.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Голосовая модель и libvosk
+        run: powershell -ExecutionPolicy Bypass -File scripts/get-vosk.ps1
+
+      - name: Тесты
+        run: cargo test
+
+      - name: Сборка
+        run: cargo build --release
+
+      - name: Установщик (Inno Setup)
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc setup.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem installer
+
+      - name: Релиз на GitHub
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Timer Pro ${{ github.ref_name }}
+          body_path: .github/release-notes/${{ github.ref_name }}.md
+          files: installer/*.exe
