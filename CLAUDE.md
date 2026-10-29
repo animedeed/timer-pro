@@ -36,6 +36,12 @@ GitHub Actions (`.github/workflows/release.yml`) скачивает модель
 `git push` работает через Git Credential Manager. Статус сборки — публичный API
 `api.github.com/repos/animedeed/timer-pro/actions/runs`.
 
+Картинки README (`docs/screenshots/*.png`) — не снимки экрана, а `docs/screenshots/showcase.html`
+(вёрстка по токенам с демо-данными), снятая Edge без окна: `msedge --headless=new
+--force-device-scale-factor=2 --default-background-color=00000000 --window-size=W,H
+--screenshot=<png> "file:///…/showcase.html?scene=hero|notes|voice"` (размеры 778×744, 422×750, 422×440).
+Настоящие скриншоты с экрана пользователя не публиковать — там личные заметки.
+
 ## Устройство
 | Файл | Что внутри |
 |---|---|
