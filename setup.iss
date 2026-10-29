@@ -6,7 +6,10 @@
 ;   "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" setup.iss
 ; Перед сборкой нужна папка resources\vosk (scripts\get-vosk.ps1).
 
-#define AppVersion "0.3.0"
+; Версию передаёт scripts\package.ps1 из Cargo.toml (/DAppVersion=…).
+#ifndef AppVersion
+  #define AppVersion "0.3.1"
+#endif
 
 [Setup]
 ; Постоянный идентификатор: по нему новая версия ставится поверх старой.

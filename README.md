@@ -42,8 +42,10 @@
 
 ## Установка
 
-1. Скачайте `TimerPro-…-Setup.exe` со страницы [Releases](../../releases/latest).
-2. Запустите — установка идёт для текущего пользователя, права администратора не нужны.
+1. Скачайте со страницы [Releases](../../releases/latest) один из файлов:
+   - `TimerPro-…-Setup.exe` — установщик: ярлыки, удаление через «Приложения», права администратора не нужны;
+   - `TimerPro-…-portable.zip` — без установки: распакуйте куда угодно и запустите `timer_pro.exe` (папка `vosk` должна лежать рядом).
+2. Запустите.
 3. Windows SmartScreen может предупредить о неизвестном издателе (установщик не подписан): «Подробнее» → «Выполнить в любом случае».
 
 Данные (таймеры, история, заметки, настройки) хранятся в `%APPDATA%\myname\TimerPro\data`, папку можно сменить в настройках.
@@ -60,9 +62,9 @@ powershell -ExecutionPolicy Bypass -File scripts\get-vosk.ps1
 cargo test
 cargo build --release
 
-# 3. Установщик (нужен Inno Setup 6: winget install JRSoftware.InnoSetup)
-& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" setup.iss
-# → installer\TimerPro-<версия>-Setup.exe
+# 3. Установщик и портативный zip (нужен Inno Setup 6: winget install JRSoftware.InnoSetup)
+powershell -ExecutionPolicy Bypass -File scripts\package.ps1
+# → installer\TimerPro-<версия>-Setup.exe и installer\TimerPro-<версия>-portable.zip
 ```
 
 Без шага 1 программа тоже собирается и работает — просто голосовое управление сообщит, что модель не найдена.

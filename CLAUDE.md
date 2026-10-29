@@ -20,7 +20,7 @@
 powershell -ExecutionPolicy Bypass -File scripts\get-vosk.ps1   # модель Vosk + libvosk → resources\vosk (не в git)
 cargo test                                                     # 50+ тестов: разбор команд, время, таймеры, календарь
 cargo build --release
-& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" setup.iss  # → installer\TimerPro-<ver>-Setup.exe
+powershell -ExecutionPolicy Bypass -File scripts\package.ps1   # → installer\TimerPro-<ver>-Setup.exe и -portable.zip
 ```
 Отладочные флаги exe: `--test-toast`, `--voice-test <папка с wav>`, `--voice-listen <сек> [имя микрофона]`, `--volume-list`.
 
@@ -29,7 +29,7 @@ cargo build --release
 (`running_since_ms` + автосохранение раз в 30 с).
 
 ## Релиз
-Версия в двух местах: `Cargo.toml` и `#define AppVersion` в `setup.iss`. Описание релиза —
+Версия — в `Cargo.toml` (`scripts\package.ps1` передаёт её в `setup.iss`). Описание релиза —
 `.github/release-notes/vX.Y.Z.md`. Затем `git tag -a vX.Y.Z -m … && git push origin vX.Y.Z` —
 GitHub Actions (`.github/workflows/release.yml`) скачивает модель, гоняет тесты, собирает
 установщик и публикует релиз. `gh` не авторизован (device-code вход у пользователя не прошёл);
