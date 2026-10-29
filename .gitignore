@@ -9,3 +9,6 @@
 /.claude/
 /.vscode/
 *.log
+
+# Заметки для Claude Code — локально, не публикуются
+/CLAUDE.md
