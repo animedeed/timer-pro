@@ -22,7 +22,7 @@ libloading = "0.8"    # Подгрузка libvosk.dll во время рабо�
 
 [target.'cfg(windows)'.dependencies]
 # Системные медиаконтролы Windows (SMTC) для плашки «Сейчас играет».
-windows = { version = "0.62", features = ["Media_Control", "Foundation", "Storage_Streams", "Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Registry", "UI_Notifications", "Data_Xml_Dom", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant", "Win32_UI_Shell_PropertiesSystem", "Win32_Storage_EnhancedStorage"] }
+windows = { version = "0.62", features = ["Media_Control", "Foundation", "Storage_Streams", "Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Registry", "UI_Notifications", "Data_Xml_Dom", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant", "Win32_UI_Shell_PropertiesSystem", "Win32_Storage_EnhancedStorage", "Win32_Media_Audio", "Win32_Media_Audio_Endpoints", "Win32_System_Threading"] }
 # Хэндл окна — чтобы убрать системную рамку Windows 11 вокруг прозрачного окна.
 raw-window-handle = "0.6"
 

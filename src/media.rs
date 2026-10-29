@@ -22,6 +22,8 @@ pub struct Snapshot {
     pub title: String,
     pub artist: String,
     pub source: String,
+    /// Исходный идентификатор источника (AUMID) — по нему ищется программа в микшере громкости.
+    pub source_id: String,
     pub playing: bool,
     pub can_prev: bool,
     pub can_next: bool,
@@ -44,6 +46,8 @@ pub enum Command {
     Previous,
     /// Перемотать на позицию от начала трека, в секундах.
     Seek(f64),
+    /// Перемотать на N секунд от текущей позиции (минус — назад).
+    SeekBy(f64),
 }
 
 pub struct MediaController {
@@ -210,6 +214,28 @@ mod backend {
                     .unwrap_or(0);
                 session.TryChangePlaybackPositionAsync(start + (secs.max(0.0) * 10_000_000.0) as i64)
             }
+            Command::SeekBy(delta) => {
+                // Позиция берётся в момент команды, а не из последнего снимка плашки.
+                let Ok(tl) = session.GetTimelineProperties() else { return };
+                let (Ok(start), Ok(end), Ok(pos)) = (tl.StartTime(), tl.EndTime(), tl.Position()) else { return };
+                let mut pos = pos.Duration;
+                let playing = session
+                    .GetPlaybackInfo()
+                    .and_then(|i| i.PlaybackStatus())
+                    .map(|s| s == Status::Playing)
+                    .unwrap_or(false);
+                if playing {
+                    if let Ok(updated) = tl.LastUpdatedTime() {
+                        if updated.UniversalTime > 0 {
+                            pos += (now_filetime() - updated.UniversalTime).max(0);
+                        }
+                    }
+                }
+                // Не дальше чем за секунду до конца — иначе плеер сразу переключит трек.
+                let last = (end.Duration - 10_000_000).max(start.Duration);
+                let target = (pos + (delta * 10_000_000.0) as i64).clamp(start.Duration, last);
+                session.TryChangePlaybackPositionAsync(target)
+            }
         };
         if let Ok(op) = op {
             let _ = op.join();
@@ -229,7 +255,8 @@ mod backend {
         let props = session.TryGetMediaPropertiesAsync()?.join()?;
         let title = props.Title().map(|s| s.to_string_lossy()).unwrap_or_default();
         let artist = props.Artist().map(|s| s.to_string_lossy()).unwrap_or_default();
-        let source = friendly_source(&session.SourceAppUserModelId().map(|s| s.to_string_lossy()).unwrap_or_default());
+        let source_id = session.SourceAppUserModelId().map(|s| s.to_string_lossy()).unwrap_or_default();
+        let source = friendly_source(&source_id);
 
         let info = session.GetPlaybackInfo()?;
         let playing = info.PlaybackStatus().map(|s| s == Status::Playing).unwrap_or(false);
@@ -290,6 +317,7 @@ mod backend {
             title,
             artist,
             source,
+            source_id,
             playing,
             can_prev,
             can_next,

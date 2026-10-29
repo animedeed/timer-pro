@@ -1327,6 +1327,30 @@ impl TimerApp {
             }
             VoiceCommand::MusicNext => self.handle_action(ctx, Action::MusicNext),
             VoiceCommand::MusicPrev => self.handle_action(ctx, Action::MusicPrev),
+            VoiceCommand::Volume(change) => {
+                // Программа, где играет музыка, — по источнику плашки «Сейчас играет».
+                let source = self.music_last.as_ref().map(|s| s.source_id.clone()).filter(|s| !s.is_empty());
+                let r = crate::volume::apply(source, change)?;
+                return Ok(Some(if r.muted {
+                    format!("{}: звук выключен", r.app)
+                } else {
+                    format!("{}: громкость {}%", r.app, (r.level * 100.0).round())
+                }));
+            }
+            VoiceCommand::SeekBy(secs) => {
+                let snap = self.music_last.as_ref().ok_or("Сейчас ничего не играет")?;
+                if !snap.can_seek {
+                    return Err(format!("{} не даёт перематывать", snap.source));
+                }
+                self.media.send(MediaCmd::SeekBy(secs));
+            }
+            VoiceCommand::SeekStart => {
+                let snap = self.music_last.as_ref().ok_or("Сейчас ничего не играет")?;
+                if !snap.can_seek {
+                    return Err(format!("{} не даёт перематывать", snap.source));
+                }
+                self.media.send(MediaCmd::Seek(0.0));
+            }
             VoiceCommand::AddTimer { secs, name } => {
                 let name = name.unwrap_or_else(|| "Таймер".into());
                 self.add_timer(name, TimerMode::Timer(Duration::from_secs(secs.max(1))), true);
@@ -3786,7 +3810,7 @@ impl TimerApp {
         y += 22.0;
 
         const EXAMPLES: [&str; 4] = [
-            "«пауза» · «дальше» · «тихо» · «таймер на 25 минут работа»",
+            "«пауза» · «громче» · «громкость 30» · «на 10 секунд назад»",
             "«заметка купить молоко» · «напомни завтра в 9 позвонить»",
             "«в заметке МИНОВ отметь контрольное» · «открой заметку отчёт»",
             "«создай папку учёба» · «положи отчёт в папку работа»",

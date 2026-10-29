@@ -10,6 +10,7 @@ mod system;
 mod theme;
 mod timer_logic;
 mod voice;
+mod volume;
 
 use eframe::egui;
 
@@ -32,6 +33,19 @@ fn main() -> eframe::Result<()> {
         let dir = args.get(i + 1).map(std::path::PathBuf::from).unwrap_or_else(|| ".".into());
         if let Err(e) = voice::run_file_test(&dir) {
             eprintln!("voice: {e}");
+        }
+        return Ok(());
+    }
+    // Программы в микшере громкости (только чтение): `timer_pro.exe --volume-list`.
+    #[cfg(windows)]
+    if args.iter().any(|a| a == "--volume-list") {
+        match volume::list() {
+            Ok(items) => {
+                for (exe, level, muted, peak, active) in items {
+                    println!("{exe:<28} громкость {:>3}%{}  пик {peak:.2}{}", (level * 100.0).round(), if muted { " (без звука)" } else { "" }, if active { "  играет" } else { "" });
+                }
+            }
+            Err(e) => eprintln!("volume: {e}"),
         }
         return Ok(());
     }

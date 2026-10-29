@@ -195,6 +195,12 @@ pub enum VoiceCommand {
     MusicPlay,
     MusicNext,
     MusicPrev,
+    /// Громкость программы, где играет музыка (не системная).
+    Volume(crate::volume::VolumeChange),
+    /// Перемотка на N секунд (минус — назад).
+    SeekBy(f64),
+    /// Трек сначала.
+    SeekStart,
     /// Новый таймер (сразу запущен). `name` — если пользователь его назвал.
     AddTimer { secs: u64, name: Option<String> },
     /// Новый секундомер (сразу запущен).
@@ -243,6 +249,16 @@ impl VoiceCommand {
             Self::MusicPlay => "Играю музыку".into(),
             Self::MusicNext => "Следующий трек".into(),
             Self::MusicPrev => "Предыдущий трек".into(),
+            Self::Volume(change) => match change {
+                crate::volume::VolumeChange::By(d) if *d > 0.0 => format!("Громче на {}%", (d * 100.0).round()),
+                crate::volume::VolumeChange::By(d) => format!("Тише на {}%", (-d * 100.0).round()),
+                crate::volume::VolumeChange::Set(v) => format!("Громкость {}%", (v * 100.0).round()),
+                crate::volume::VolumeChange::Mute(true) => "Звук выключен".into(),
+                crate::volume::VolumeChange::Mute(false) => "Звук включён".into(),
+            },
+            Self::SeekBy(s) if *s < 0.0 => format!("Назад на {} с", (-s).round()),
+            Self::SeekBy(s) => format!("Вперёд на {} с", s.round()),
+            Self::SeekStart => "Трек сначала".into(),
             Self::AddTimer { secs, name } => match name {
                 Some(n) => format!("Таймер «{n}» — {}", human_secs(*secs)),
                 None => format!("Таймер на {}", human_secs(*secs)),
@@ -810,6 +826,76 @@ fn parse_notes_command(words: &[String], now: NaiveDateTime) -> Option<VoiceComm
     None
 }
 
+/// Первое целое число в словах: «тридцать», «двадцать пять», «30».
+fn first_number(words: &[String]) -> Option<f64> {
+    let i = words.iter().position(|w| number_word(w).is_some())?;
+    let n = number_word(&words[i])?;
+    // «половину» → 50 %.
+    if n > 0.0 && n < 1.0 {
+        return Some(n * 100.0);
+    }
+    let units = words.get(i + 1).and_then(|w| number_word(w));
+    Some(match units {
+        Some(u) if n >= 20.0 && n % 10.0 == 0.0 && (1.0..10.0).contains(&u) => n + u,
+        _ => n,
+    })
+}
+
+/// Громкость: «громче», «тише» (±10 %), «громче на 20», «громкость 30»,
+/// «громкость на максимум», «выключи звук», «включи звук».
+fn parse_volume(words: &[String]) -> Option<VoiceCommand> {
+    use crate::volume::VolumeChange;
+    let louder = has(words, &["громче", "погромче", "прибав", "увелич"]);
+    let quieter = has(words, &["тише", "потише", "убав", "уменьш", "приглуш"]);
+    let volume_ctx = has(words, &["громкост", "звук"]);
+    if !louder && !quieter && !volume_ctx {
+        return None;
+    }
+    let pct = first_number(words).filter(|n| (0.0..=100.0).contains(n)).map(|n| n as f32 / 100.0);
+    if louder {
+        return Some(VoiceCommand::Volume(VolumeChange::By(pct.unwrap_or(0.1))));
+    }
+    if quieter {
+        return Some(VoiceCommand::Volume(VolumeChange::By(-pct.unwrap_or(0.1))));
+    }
+    if has(words, &["выключи", "отключи", "убери", "без"]) {
+        return Some(VoiceCommand::Volume(VolumeChange::Mute(true)));
+    }
+    if has(words, &["максим", "полн"]) {
+        return Some(VoiceCommand::Volume(VolumeChange::Set(1.0)));
+    }
+    if let Some(p) = pct {
+        return Some(VoiceCommand::Volume(VolumeChange::Set(p)));
+    }
+    if has(words, &["включи", "верни"]) {
+        return Some(VoiceCommand::Volume(VolumeChange::Mute(false)));
+    }
+    None
+}
+
+/// Перемотка: «на 10 секунд назад», «вперёд на минуту», «перемотай назад», «трек сначала».
+/// Просто «назад» / «вперёд» без времени — это переключение трека.
+fn parse_seek(words: &[String]) -> Option<VoiceCommand> {
+    if has(words, &["сначала"]) || words.windows(2).any(|w| w[0] == "с" && w[1] == "начала") {
+        return Some(VoiceCommand::SeekStart);
+    }
+    let back = has(words, &["назад", "отмот"]);
+    let forward = has(words, &["вперед"]);
+    let seek_word = has(words, &["перемот", "промот", "отмот"]);
+    if !back && !forward && !seek_word {
+        return None;
+    }
+    // Голое число — секунды: «назад на 10».
+    let has_unit = words.iter().any(|w| unit_word(w).is_some() || half_unit_word(w).is_some());
+    let secs = if has_unit { parse_duration(words).0.map(|s| s as f64) } else { first_number(words) };
+    let secs = match secs {
+        Some(s) => s,
+        None if seek_word => 10.0,
+        None => return None,
+    };
+    Some(VoiceCommand::SeekBy(if back { -secs } else { secs }))
+}
+
 /// Разбор команды — слова ПОСЛЕ «Джарвис».
 pub fn parse_command(text: &str) -> Option<VoiceCommand> {
     parse_command_at(text, notes::now())
@@ -822,6 +908,9 @@ pub fn parse_command_at(text: &str, now: NaiveDateTime) -> Option<VoiceCommand> 
         return None;
     }
     if let Some(cmd) = parse_notes_command(&words, now) {
+        return Some(cmd);
+    }
+    if let Some(cmd) = parse_volume(&words).or_else(|| parse_seek(&words)) {
         return Some(cmd);
     }
     let timer_ctx = has(&words, &["таймер"]);
@@ -1481,6 +1570,35 @@ mod tests {
         // Старые команды не сломались.
         assert_eq!(c("останови таймер"), Some(VoiceCommand::StopTimer));
         assert_eq!(c("пауза"), Some(VoiceCommand::MusicPause));
+    }
+
+    #[test]
+    fn volume_and_seek_commands() {
+        use crate::volume::VolumeChange::*;
+        let v = |c| Some(VoiceCommand::Volume(c));
+        assert_eq!(cmd("громче"), v(By(0.1)));
+        assert_eq!(cmd("сделай погромче"), v(By(0.1)));
+        assert_eq!(cmd("тише"), v(By(-0.1)));
+        assert_eq!(cmd("громче на двадцать"), v(By(0.2)));
+        assert_eq!(cmd("убавь звук на 30 процентов"), v(By(-0.3)));
+        assert_eq!(cmd("громкость тридцать"), v(Set(0.3)));
+        assert_eq!(cmd("поставь громкость на двадцать пять процентов"), v(Set(0.25)));
+        assert_eq!(cmd("громкость на максимум"), v(Set(1.0)));
+        assert_eq!(cmd("громкость на половину"), v(Set(0.5)));
+        assert_eq!(cmd("выключи звук"), v(Mute(true)));
+        assert_eq!(cmd("включи звук"), v(Mute(false)));
+        // «тихо» — по-прежнему будильник.
+        assert_eq!(cmd("тихо"), Some(VoiceCommand::Silence));
+
+        assert_eq!(cmd("на десять секунд назад"), Some(VoiceCommand::SeekBy(-10.0)));
+        assert_eq!(cmd("назад на 30"), Some(VoiceCommand::SeekBy(-30.0)));
+        assert_eq!(cmd("вперед на минуту"), Some(VoiceCommand::SeekBy(60.0)));
+        assert_eq!(cmd("перемотай на полторы минуты вперед"), Some(VoiceCommand::SeekBy(90.0)));
+        assert_eq!(cmd("перемотай назад"), Some(VoiceCommand::SeekBy(-10.0)));
+        assert_eq!(cmd("трек сначала"), Some(VoiceCommand::SeekStart));
+        // Без времени — переключение трека, как раньше.
+        assert_eq!(cmd("назад"), Some(VoiceCommand::MusicPrev));
+        assert_eq!(cmd("вперед"), Some(VoiceCommand::MusicNext));
     }
 
     #[test]

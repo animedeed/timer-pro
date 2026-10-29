@@ -22,7 +22,7 @@ cargo test                                                     # 50+ тесто�
 cargo build --release
 & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" setup.iss  # → installer\TimerPro-<ver>-Setup.exe
 ```
-Отладочные флаги exe: `--test-toast`, `--voice-test <папка с wav>`, `--voice-listen <сек> [имя микрофона]`.
+Отладочные флаги exe: `--test-toast`, `--voice-test <папка с wav>`, `--voice-listen <сек> [имя микрофона]`, `--volume-list`.
 
 Перед `cargo build --release` приложение надо закрыть (exe занят). Если оно свёрнуто в трей,
 `CloseMainWindow` не работает (окна нет) — завершать процесс; таймеры не теряются
@@ -46,7 +46,8 @@ GitHub Actions (`.github/workflows/release.yml`) скачивает модель
 | `src/timer_logic.rs` | `TimerInstance`: таймер/секундомер, `sync()` перед сохранением, `resume_after_load()` |
 | `src/notes.rs` | Заметки, папки, `Reminder` (Once/Daily/Weekdays/Weekly), `parse_when` («завтра в 9»), нечёткий поиск |
 | `src/voice.rs` | Vosk через `libloading` (FFI), захват микрофона cpal → 16 кГц, «Джарвис», `parse_command` |
-| `src/media.rs` | SMTC (`Windows.Media.Control`) в фоновом потоке: снимок трека, команды, перемотка |
+| `src/media.rs` | SMTC (`Windows.Media.Control`) в фоновом потоке: снимок трека (`source_id` = AUMID), команды, перемотка (`SeekBy` от текущей позиции) |
+| `src/volume.rs` | Громкость программы-источника в микшере Windows (Core Audio): поиск по AUMID → exe (`source_matches`), иначе самый громкий активный поток |
 | `src/system.rs` | Горячие клавиши (`global-hotkey`) и их запись, трей (`tray-icon`), тосты Windows |
 | `src/models.rs`, `src/storage.rs` | `AppConfig`/`AppState` (serde, `#[serde(default)]`), JSON в `%APPDATA%\myname\TimerPro\data` |
 
@@ -73,6 +74,9 @@ GitHub Actions (`.github/workflows/release.yml`) скачивает модель
   новая заметка/напоминание → отметка. «в заметке X …» — название до первого слова-действия (`note_scope`).
 - **Тексты в полях заметок растут по высоте:** высоты считает `editor_layout` (тот же шрифт и ширина
   переноса, `TextEdit` с `margin(ZERO)`), иначе текст вылезает за поле.
+- **Громкость — не системная.** Голосом меняется уровень программы в микшере (у браузера все вкладки сразу).
+  Громкость внутри сайта (ползунок music.yandex.ru) так недоступна — только через расширение браузера.
+  «тихо» = будильник, «тише» = громкость; голое «назад»/«вперёд» = трек, с временем — перемотка.
 - **Конфиги с BOM** — `storage::strip_bom`. **PowerShell-скрипты с кириллицей — сохранять с UTF-8 BOM**,
   иначе Windows PowerShell 5.1 не разбирает их (так упала первая сборка релиза).
 - Папка проекта числится за старым SID — для git добавлен `safe.directory`.
