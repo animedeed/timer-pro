@@ -217,7 +217,7 @@ pub enum VoiceCommand {
     /// Новая заметка: текст, папка (как сказали), напоминание.
     AddNote { title: String, folders: Vec<String>, reminder: Option<(NaiveDateTime, Repeat)> },
     /// Отметка «выполнено» (`done`) или снятие отметки. `note` — явно названная
-    /// заметка («в заметке МИНОВ …»), `target` — что отметить: пункт или сама заметка.
+    /// заметка («в заметке курсовая …»), `target` — что отметить: пункт или сама заметка.
     /// `item_only` — сказали «пункт», названия заметок не проверять.
     Check { note: Option<String>, target: Option<String>, item_only: bool, done: bool },
     DeleteNote { query: String },
@@ -570,7 +570,7 @@ const QUERY_FILLER: &[&str] = &[
     "отмени", "не", "выполненным", "вычеркни", "у", "для", "это", "что",
 ];
 
-/// Слова, на которых заканчивается название заметки в «в заметке МИНОВ отметь …».
+/// Слова, на которых заканчивается название заметки в «в заметке курсовая отметь …».
 fn is_action_word(w: &str) -> bool {
     [
         "отмет", "выполн", "сделал", "сделано", "готов", "вычеркн", "галочк", "поставь", "сними", "снять",
@@ -605,7 +605,7 @@ fn split_scope(words: &[String]) -> (Option<String>, Vec<String>) {
     }
 }
 
-/// Отметка: «отметь контрольное», «в заметке МИНОВ отметь контрольное»,
+/// Отметка: «отметь контрольное», «в заметке курсовая отметь контрольное»,
 /// «отметь заметку молоко», «сними отметку с хлеб».
 fn parse_check(words: &[String]) -> Option<VoiceCommand> {
     let undo = (has(words, &["сними", "снять", "верни", "отмени"]) && has(words, &["отметк", "галочк", "выполн"]))
@@ -790,7 +790,7 @@ fn parse_notes_command(words: &[String], now: NaiveDateTime) -> Option<VoiceComm
         }
     }
 
-    // Одна заметка: «открой заметку МИНОВ».
+    // Одна заметка: «открой заметку курсовая».
     if !plural_notes && has(words, &["открой", "покажи", "отобрази"]) {
         if let (Some(query), _) = split_scope(words) {
             return Some(VoiceCommand::OpenNote { query });
@@ -819,7 +819,7 @@ fn parse_notes_command(words: &[String], now: NaiveDateTime) -> Option<VoiceComm
         return Some(parse_note(words, now));
     }
 
-    // Отметка: «отметь заметку молоко», «в заметке МИНОВ отметь контрольное», «сними отметку с хлеб».
+    // Отметка: «отметь заметку молоко», «в заметке курсовая отметь контрольное», «сними отметку с хлеб».
     if !timer_ctx {
         return parse_check(words);
     }
@@ -1542,12 +1542,12 @@ mod tests {
         assert_eq!(c("отметь заметку молоко"), check(Some("молоко"), None, false, true));
         assert_eq!(c("отметь молоко выполненной"), check(None, Some("молоко"), false, true));
         assert_eq!(c("выполнено отчет"), check(None, Some("отчет"), false, true));
-        assert_eq!(c("в заметке минов поставь выполнено контрольное"), check(Some("минов"), Some("контрольное"), false, true));
-        assert_eq!(c("отметь контрольное в заметке минов"), check(Some("минов"), Some("контрольное"), false, true));
+        assert_eq!(c("в заметке курсовая поставь выполнено контрольное"), check(Some("курсовая"), Some("контрольное"), false, true));
+        assert_eq!(c("отметь контрольное в заметке курсовая"), check(Some("курсовая"), Some("контрольное"), false, true));
         assert_eq!(c("в заметке контрольная работа отметь вопрос три"), check(Some("контрольная работа"), Some("вопрос три"), false, true));
         assert_eq!(c("отметь пункт контрольное"), check(None, Some("контрольное"), true, true));
         assert_eq!(c("сними отметку с хлеб"), check(None, Some("хлеб"), false, false));
-        assert_eq!(c("открой заметку минов"), Some(VoiceCommand::OpenNote { query: "минов".into() }));
+        assert_eq!(c("открой заметку курсовая"), Some(VoiceCommand::OpenNote { query: "курсовая".into() }));
         assert_eq!(c("добавь пункт хлеб"), Some(VoiceCommand::AddNoteItem { note: None, item: "Хлеб".into() }));
         assert_eq!(
             c("удали пункт хлеб в заметке покупки"),

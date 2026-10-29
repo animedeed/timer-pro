@@ -751,7 +751,7 @@ mod tests {
     #[test]
     fn item_search_prefers_pending_and_detects_ambiguity() {
         let item = |t: &str, done: bool| NoteItem { text: t.into(), done };
-        let mut a = Note::new("МИНОВ".into(), vec![]);
+        let mut a = Note::new("Курсовая".into(), vec![]);
         a.items = vec![item("Лекции", true), item("Контрольное", false)];
         let mut b = Note::new("Физика".into(), vec![]);
         b.items = vec![item("Контрольное", false)];
@@ -759,11 +759,11 @@ mod tests {
         assert_eq!(find_item(&notes[0], "контрольное", true), Some(1));
         // В двух заметках, оба не отмечены — неоднозначно.
         assert_eq!(find_item_everywhere(&notes, "контрольное", true).len(), 2);
-        // Лекции есть только в МИНОВ.
+        // Лекции есть только в «Курсовой».
         assert_eq!(find_item_everywhere(&notes, "лекции", false), vec![(0, 0)]);
         let mut notes = notes;
         notes[1].items[0].done = true;
-        // Во «Физике» уже отмечено — остаётся МИНОВ.
+        // Во «Физике» уже отмечено — остаётся «Курсовая».
         assert_eq!(find_item_everywhere(&notes, "контрольное", true), vec![(0, 1)]);
     }
 
