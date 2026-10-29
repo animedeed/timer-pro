@@ -8,7 +8,7 @@
 
 ; Версию передаёт scripts\package.ps1 из Cargo.toml (/DAppVersion=…).
 #ifndef AppVersion
-  #define AppVersion "0.3.1"
+  #define AppVersion "0.3.2"
 #endif
 
 [Setup]
