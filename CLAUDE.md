@@ -39,7 +39,7 @@ GitHub Actions (`.github/workflows/release.yml`) скачивает модель
 Картинки README (`docs/screenshots/*.png`) — не снимки экрана, а `docs/screenshots/showcase.html`
 (вёрстка по токенам с демо-данными), снятая Edge без окна: `msedge --headless=new
 --force-device-scale-factor=2 --default-background-color=00000000 --window-size=W,H
---screenshot=<png> "file:///…/showcase.html?scene=hero|notes|voice"` (размеры 778×744, 422×750, 422×440).
+--screenshot=<png> "file:///…/showcase.html?scene=hero|notes|voice"` (размеры 778×744, 422×750, 422×440; `social` — 1280×640 при масштабе 1, для Social preview).
 Настоящие скриншоты с экрана пользователя не публиковать — там личные заметки.
 
 ## Устройство

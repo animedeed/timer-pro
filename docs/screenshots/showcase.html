@@ -169,6 +169,20 @@ body { font-family: Inter, sans-serif; color: var(--t1); -webkit-font-smoothing:
   </div>
 </div></div>
 
+<!-- Превью для ссылок (GitHub Social preview, мессенджеры): 1280×640 -->
+<div class="scene" id="social" style="width:1280px;height:640px;padding:0 64px;border-radius:0;display:none;align-items:center;gap:40px;">
+  <div style="flex:1;display:flex;flex-direction:column;gap:18px;">
+    <img src="../../resources/timer.png" style="width:88px;height:88px;">
+    <div style="font-size:64px;font-weight:500;letter-spacing:-1px;line-height:1;">Timer Pro</div>
+    <div style="font-size:24px;line-height:34px;color:var(--t2);">Плавающий виджет-таймер для Windows:<br>заметки, напоминания, музыка<br>и офлайн-помощник «Джарвис»</div>
+    <div style="display:flex;gap:10px;margin-top:6px;font-size:16px;">
+      <span class="chip on" style="height:34px;padding:0 14px;font-size:16px;">Windows 10 / 11</span>
+      <span class="chip" style="height:34px;padding:0 14px;font-size:16px;">Бесплатно · MIT</span>
+    </div>
+  </div>
+  <div style="width:544px;height:518px;flex:none;"><div style="transform:scale(.77);transform-origin:top left;width:706px;" data-social></div></div>
+</div>
+
 <script>
 const T = id => document.getElementById("tpl-" + id).content.firstElementChild.cloneNode(true);
 
@@ -250,7 +264,11 @@ for (const slot of document.querySelectorAll('[data-use]')) {
 }
 
 const scene = new URLSearchParams(location.search).get('scene') || 'hero';
-document.getElementById(scene).classList.add('on');
+if (scene === 'social') {
+  // В превью — та же композиция, что в hero, уменьшенная.
+  document.querySelector('[data-social]').appendChild(document.querySelector('#hero > .row'));
+  document.getElementById('social').style.display = 'flex';
+} else document.getElementById(scene).classList.add('on');
 </script>
 </body>
 </html>
