@@ -1,0 +1,4 @@
+# Рантайм C (vcruntime) вшивается в exe: иначе на «чистой» Windows без
+# Visual C++ Redistributable программа не запускалась бы (нет VCRUNTIME140.dll).
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
