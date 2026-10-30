@@ -14,7 +14,37 @@ mod volume;
 
 use eframe::egui;
 
+/// Падение программы: окно с текстом ошибки и отчёт crash.log рядом с данными.
+/// Без этого exe без консоли просто молча исчезал бы — и причину было не узнать.
+fn install_crash_report() {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let dir = storage::get_default_path();
+        let path = dir.join("crash.log");
+        let report = format!(
+            "Timer Pro {} · {}\n{info}\n\n{}",
+            env!("CARGO_PKG_VERSION"),
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+            std::backtrace::Backtrace::force_capture()
+        );
+        let _ = std::fs::create_dir_all(&dir);
+        let _ = std::fs::write(&path, &report);
+        #[cfg(windows)]
+        {
+            use windows::core::HSTRING;
+            use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONERROR, MB_OK};
+            let text = HSTRING::from(format!(
+                "Программа столкнулась с ошибкой и закроется.\n\n{info}\n\nОтчёт сохранён:\n{}\nПришлите его разработчику.",
+                path.display()
+            ));
+            unsafe { MessageBoxW(None, &text, &HSTRING::from("Timer Pro — ошибка"), MB_OK | MB_ICONERROR) };
+        }
+        default_hook(info);
+    }));
+}
+
 fn main() -> eframe::Result<()> {
+    install_crash_report();
     // Идентификатор приложения для уведомлений Windows — до создания окон.
     system::register_app_identity();
 

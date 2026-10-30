@@ -576,7 +576,7 @@ impl Tray {
             .with_menu(Box::new(menu))
             .with_menu_on_left_click(false)
             .with_tooltip("Timer Pro")
-            .with_icon(render_icon(TrayLook::Idle, t::KNOB)?)
+            .with_icon(render_icon(TrayLook::Idle, t::KNOB())?)
             .build()
             .ok()?;
         Some(Self { icon, toggle, start, stop, silence, on_top, rx, last: None })
@@ -639,9 +639,9 @@ fn tray_icon_size() -> u32 {
 
 fn render_icon(look: TrayLook, accent: Color32) -> Option<Icon> {
     let (disc, ink) = match look {
-        TrayLook::Idle => (t::SURFACE_3, t::TEXT_PRIMARY),
+        TrayLook::Idle => (t::SURFACE_3(), t::TEXT_PRIMARY()),
         TrayLook::Running => (accent, t::on_accent(accent)),
-        TrayLook::Ringing => (t::DANGER, Color32::from_rgb(0x14, 0x15, 0x1F)),
+        TrayLook::Ringing => (t::DANGER(), Color32::from_rgb(0x14, 0x15, 0x1F)),
     };
     let size = tray_icon_size();
     Icon::from_rgba(tray_icon_rgba(size, disc, ink), size, size).ok()
@@ -860,7 +860,7 @@ mod tests {
     #[test]
     fn tray_icon_has_transparent_corners_and_opaque_center() {
         let size = 16;
-        let px = tray_icon_rgba(size, t::SURFACE_3, t::TEXT_PRIMARY);
+        let px = tray_icon_rgba(size, t::SURFACE_3(), t::TEXT_PRIMARY());
         assert_eq!(px.len(), (size * size * 4) as usize);
         assert_eq!(px[3], 0, "угол прозрачный");
         let center = ((8 * size + 8) * 4 + 3) as usize;

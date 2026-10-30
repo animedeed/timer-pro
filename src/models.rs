@@ -58,6 +58,8 @@ pub struct AppConfig {
     pub voice_device: Option<String>,
     /// Порядок списка заметок.
     pub notes_sort: NotesSort,
+    /// Светлая тема вместо тёмной.
+    pub light_theme: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -90,10 +92,11 @@ impl Default for AppConfig {
             hotkeys_enabled: true,
             hotkeys: crate::system::Bindings::default(),
             tray_enabled: true,
-            close_to_tray: false,
+            close_to_tray: true,
             voice_enabled: false,
             voice_device: None,
             notes_sort: NotesSort::default(),
+            light_theme: false,
         }
     }
 }

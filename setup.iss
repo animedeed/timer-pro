@@ -1,4 +1,4 @@
-; Скрипт для Inno Setup
+﻿; Скрипт для Inno Setup
 ; Внимание: вне секции [Code] Inno Setup понимает как комментарий только ';'.
 ; Строки с '//' раньше вызывали ошибку разбора скрипта.
 ;
@@ -8,7 +8,7 @@
 
 ; Версию передаёт scripts\package.ps1 из Cargo.toml (/DAppVersion=…).
 #ifndef AppVersion
-  #define AppVersion "0.3.2"
+  #define AppVersion "0.3.3"
 #endif
 
 [Setup]
@@ -23,6 +23,8 @@ AppSupportURL=https://github.com/animedeed/timer-pro/issues
 DefaultDirName={autopf}\TimerPro
 DefaultGroupName=Timer Pro
 DisableProgramGroupPage=yes
+; При обновлении папку не спрашиваем — ставим туда же, где стояла прошлая версия.
+DisableDirPage=auto
 ; Установка для текущего пользователя — без запроса прав администратора.
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -63,3 +65,44 @@ Name: "{autodesktop}\Timer Pro"; Filename: "{app}\timer_pro.exe"; AppUserModelID
 
 [Run]
 Filename: "{app}\timer_pro.exe"; Description: "{cm:LaunchProgram,Timer Pro}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+// Повторный запуск установщика — это обновление: показываем версии, пропускаем
+// лицензию и выбор ярлыков, кнопка «Обновить». Та же версия — спрашиваем.
+const
+  UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6F3C2A51-8E4B-4D7A-9C1E-2B5F7A9D3E10}_is1';
+
+var
+  PrevVersion: String;
+
+function InitializeSetup(): Boolean;
+begin
+  if not RegQueryStringValue(HKCU, UninstallKey, 'DisplayVersion', PrevVersion) then
+    if not RegQueryStringValue(HKLM, UninstallKey, 'DisplayVersion', PrevVersion) then
+      PrevVersion := '';
+  Result := True;
+  if PrevVersion = '{#AppVersion}' then
+    Result := MsgBox('Timer Pro {#AppVersion} уже установлен.' + #13#10 + 'Переустановить?', mbConfirmation, MB_YESNO) = IDYES;
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PrevVersion <> '') and ((PageID = wpLicense) or (PageID = wpSelectTasks));
+end;
+
+procedure InitializeWizard();
+begin
+  if (PrevVersion <> '') and (PrevVersion <> '{#AppVersion}') then
+    WizardForm.Caption := 'Обновление Timer Pro ' + PrevVersion + ' → {#AppVersion}';
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if (CurPageID = wpReady) and (PrevVersion <> '') then
+  begin
+    WizardForm.NextButton.Caption := 'Обновить';
+    WizardForm.PageNameLabel.Caption := 'Готово к обновлению';
+    WizardForm.PageDescriptionLabel.Caption :=
+      'Версия {#AppVersion} будет установлена поверх ' + PrevVersion + '. Таймеры, заметки и настройки сохранятся.';
+  end;
+end;

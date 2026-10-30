@@ -70,16 +70,16 @@ enum FolderAct {
 fn text_field(ui: &mut Ui, r: Rect, id: Id, value: &mut String, hint: &str, accent: Color32) -> Response {
     let focused = ui.memory(|m| m.has_focus(id));
     ui.painter().rect(
-        r, t::RADIUS_CTRL, t::SURFACE_2,
-        Stroke::new(1.0, if focused { accent } else { t::BLOCK_STROKE }),
+        r, t::RADIUS_CTRL, t::SURFACE_2(),
+        Stroke::new(1.0, if focused { accent } else { t::BLOCK_STROKE() }),
         StrokeKind::Inside,
     );
     let edit = egui::TextEdit::singleline(value)
         .id(id)
         .frame(egui::Frame::NONE)
-        .hint_text(egui::RichText::new(hint).color(t::TEXT_TERTIARY))
+        .hint_text(egui::RichText::new(hint).color(t::TEXT_TERTIARY()))
         .font(t::regular(12.5))
-        .text_color(t::TEXT_PRIMARY)
+        .text_color(t::TEXT_PRIMARY())
         .vertical_align(egui::Align::Center)
         .desired_width(r.width() - 20.0);
     ui.place(r.shrink2(vec2(10.0, 0.0)), edit)
@@ -92,8 +92,8 @@ fn text_field(ui: &mut Ui, r: Rect, id: Id, value: &mut String, hint: &str, acce
 fn text_area(ui: &mut Ui, r: Rect, id: Id, value: &mut String, hint: &str, accent: Color32, font: egui::FontId, pad: egui::Vec2, newlines: bool) -> Response {
     let focused = ui.memory(|m| m.has_focus(id));
     ui.painter().rect(
-        r, t::RADIUS_CTRL, t::SURFACE_2,
-        Stroke::new(1.0, if focused { accent } else { t::BLOCK_STROKE }),
+        r, t::RADIUS_CTRL, t::SURFACE_2(),
+        Stroke::new(1.0, if focused { accent } else { t::BLOCK_STROKE() }),
         StrokeKind::Inside,
     );
     let inner = r.shrink2(pad);
@@ -101,9 +101,9 @@ fn text_area(ui: &mut Ui, r: Rect, id: Id, value: &mut String, hint: &str, accen
         .id(id)
         .frame(egui::Frame::NONE)
         .margin(egui::Margin::ZERO)
-        .hint_text(egui::RichText::new(hint).color(t::TEXT_TERTIARY))
+        .hint_text(egui::RichText::new(hint).color(t::TEXT_TERTIARY()))
         .font(font)
-        .text_color(t::TEXT_PRIMARY)
+        .text_color(t::TEXT_PRIMARY())
         .desired_rows(1)
         .desired_width(inner.width());
     if !newlines {
@@ -119,7 +119,7 @@ fn text_area(ui: &mut Ui, r: Rect, id: Id, value: &mut String, hint: &str, accen
 /// Высота текста с переносом по ширине `wrap_w` (пустой — одна строка).
 fn text_h(ui: &Ui, text: &str, font: egui::FontId, wrap_w: f32) -> f32 {
     let sample = if text.is_empty() { "Ag" } else { text };
-    ui.painter().layout(sample.to_owned(), font, t::TEXT_PRIMARY, wrap_w.max(10.0)).size().y
+    ui.painter().layout(sample.to_owned(), font, t::TEXT_PRIMARY(), wrap_w.max(10.0)).size().y
 }
 
 /// Отступы полей карточки заметки.
@@ -159,7 +159,7 @@ fn checkbox(ui: &Ui, rect: Rect, id: Id, checked: bool, accent: Color32) -> Resp
         p.rect_filled(rect, 5u8, accent);
         p.text(rect.center(), Align2::CENTER_CENTER, ph::CHECK, t::icon(rect.width() * 0.72, false), t::on_accent(accent));
     } else {
-        let color = if resp.hovered() { accent } else { t::TEXT_TERTIARY };
+        let color = if resp.hovered() { accent } else { t::TEXT_TERTIARY() };
         p.rect_stroke(rect, 5u8, Stroke::new(1.5, color), StrokeKind::Inside);
     }
     resp
@@ -175,9 +175,9 @@ fn folder_chip(ui: &Ui, rect: Rect, id: Id, label: &str, dot: Option<Color32>, s
     let fill = if selected {
         t::tint(accent, 0x2E)
     } else if resp.hovered() {
-        t::SURFACE_3
+        t::SURFACE_3()
     } else {
-        t::SURFACE_2
+        t::SURFACE_2()
     };
     let stroke = if selected { t::tint(accent, 0x80) } else { Color32::TRANSPARENT };
     ui.painter().rect(rect, t::RADIUS_CHIP, fill, Stroke::new(1.0, stroke), StrokeKind::Inside);
@@ -186,12 +186,12 @@ fn folder_chip(ui: &Ui, rect: Rect, id: Id, label: &str, dot: Option<Color32>, s
         ui.painter().circle_filled(pos2(x + 3.0, rect.center().y), 3.0, c);
         x += 11.0;
     }
-    kit::text(ui, pos2(x, rect.center().y), Align2::LEFT_CENTER, label, t::regular(size), if selected { accent } else { t::TEXT_SECONDARY });
+    kit::text(ui, pos2(x, rect.center().y), Align2::LEFT_CENTER, label, t::regular(size), if selected { accent } else { t::TEXT_SECONDARY() });
     resp
 }
 
 fn chip_width(ui: &Ui, label: &str, dot: bool, size: f32) -> f32 {
-    kit::galley(ui, label, t::regular(size), t::TEXT_SECONDARY).size().x + 18.0 + if dot { 11.0 } else { 0.0 }
+    kit::galley(ui, label, t::regular(size), t::TEXT_SECONDARY()).size().x + 18.0 + if dot { 11.0 } else { 0.0 }
 }
 
 fn folder_color(c: [u8; 3]) -> Color32 {
@@ -666,6 +666,7 @@ impl TimerApp {
             note.migrate();
         }
         t::install_fonts(&cc.egui_ctx);
+        t::set_light(config.light_theme);
         t::apply_style(&cc.egui_ctx, accent_of(&config));
 
         let initial_id = state.active_timers.first().map(|t| t.id).unwrap_or(0);
@@ -1813,7 +1814,7 @@ impl TimerApp {
                 t::tint(accent, 0x60)
             }
         } else {
-            t::BLOCK_STROKE
+            t::BLOCK_STROKE()
         };
         kit::paint_block(ui.painter(), rect, stroke);
 
@@ -1827,9 +1828,9 @@ impl TimerApp {
         // Слева — кнопка заметок: панель открывается с этой же стороны.
         // Перетаскивать виджет можно за любое место, поэтому ручка-точки больше не нужна.
         let notes_r = Rect::from_min_size(pos2(rect.left() + 4.0, cy - 20.0), vec2(28.0, 40.0));
-        let notes_color = if self.notes_open { accent } else { t::TEXT_TERTIARY };
+        let notes_color = if self.notes_open { accent } else { t::TEXT_TERTIARY() };
         let notes_style = ButtonStyle {
-            hover_color: if self.notes_open { accent } else { t::TEXT_PRIMARY },
+            hover_color: if self.notes_open { accent } else { t::TEXT_PRIMARY() },
             ..ButtonStyle::ghost(notes_color, t::RADIUS_CTRL)
         };
         if kit::button(ui, notes_r, Id::new("w_notes"), Content::Icon { glyph: ph::NOTEPAD, size: 18.0, fill: self.notes_open }, notes_style, true)
@@ -1840,14 +1841,14 @@ impl TimerApp {
         }
         // Красная точка — есть просроченные напоминания.
         if self.state.notes.iter().any(|n| n.overdue()) {
-            ui.painter().circle_filled(pos2(notes_r.right() - 6.0, notes_r.top() + 9.0), 3.0, t::DANGER);
+            ui.painter().circle_filled(pos2(notes_r.right() - 6.0, notes_r.top() + 9.0), 3.0, t::DANGER());
         }
 
         // Справа налево: закрыть, разделитель, меню, группа play/stop или «Тихо».
         let right = rect.right() - 12.0;
         let close_r = Rect::from_center_size(pos2(right - 14.0, cy), vec2(28.0, 28.0));
         let sep_x = close_r.left() - 8.5;
-        ui.painter().line_segment([pos2(sep_x, cy - 12.0), pos2(sep_x, cy + 12.0)], Stroke::new(1.0, t::LINE));
+        ui.painter().line_segment([pos2(sep_x, cy - 12.0), pos2(sep_x, cy + 12.0)], Stroke::new(1.0, t::LINE()));
         let menu_r = Rect::from_min_size(pos2(sep_x - 8.5 - 40.0, cy - 20.0), vec2(40.0, 40.0));
         // Play, stop и меню — с одинаковым шагом 4 px. В макете до меню было 8,
         // и тройка кнопок выглядела несимметрично.
@@ -1858,7 +1859,7 @@ impl TimerApp {
         let text_left = notes_r.right() + 4.0;
         let text_w = group_left - 8.0 - text_left;
         let top = cy - 23.0;
-        let label_color = if alarmed { t::DANGER } else { t::TEXT_SECONDARY };
+        let label_color = if alarmed { t::DANGER() } else { t::TEXT_SECONDARY() };
         let (mode_icon, mode_fill) = if ringing {
             (ph::BELL_RINGING, true)
         } else if timer.as_ref().is_some_and(|tm| matches!(tm.mode, TimerMode::Stopwatch)) {
@@ -1877,7 +1878,7 @@ impl TimerApp {
             let dots = (ctx.input(|i| i.time) * 3.0) as usize % 4;
             Some((format!("Слушаю{}", ".".repeat(dots)), accent))
         } else {
-            self.voice_feedback.as_ref().map(|(s, ok, _)| (s.clone(), if *ok { accent } else { t::TEXT_TERTIARY }))
+            self.voice_feedback.as_ref().map(|(s, ok, _)| (s.clone(), if *ok { accent } else { t::TEXT_TERTIARY() }))
         };
         let alert = self.note_alert.and_then(|(id, _)| {
             self.state.notes.iter().find(|n| n.id == id).map(|n| (id, n.title.clone()))
@@ -1904,11 +1905,11 @@ impl TimerApp {
         }
         let time = timer.as_ref().map(|tm| fmt_hms(tm.time_left().as_secs())).unwrap_or_else(|| "00:00:00".into());
         let time_color = if alarmed {
-            t::DANGER
+            t::DANGER()
         } else if state == WidgetState::Idle {
-            t::TEXT_TERTIARY
+            t::TEXT_TERTIARY()
         } else {
-            t::TEXT_PRIMARY
+            t::TEXT_PRIMARY()
         };
         kit::text(ui, pos2(text_left, top + 16.0 + 15.0), Align2::LEFT_CENTER, &time, t::mono_medium(26.0), time_color);
 
@@ -1956,7 +1957,7 @@ impl TimerApp {
         }
 
         let to_tray = self.tray.is_some() && self.config.close_to_tray;
-        if kit::button(ui, close_r, Id::new("w_close"), Content::Icon { glyph: ph::X, size: 16.0, fill: false }, ButtonStyle::ghost(t::TEXT_TERTIARY, t::RADIUS_CTRL), true)
+        if kit::button(ui, close_r, Id::new("w_close"), Content::Icon { glyph: ph::X, size: 16.0, fill: false }, ButtonStyle::ghost(t::TEXT_TERTIARY(), t::RADIUS_CTRL), true)
             .on_hover_text(if to_tray { "Свернуть в трей" } else { "Закрыть программу" })
             .clicked()
         {
@@ -1975,7 +1976,7 @@ impl TimerApp {
         let ctx = ui.ctx().clone();
         // Перетаскивание плашки между местами над и под виджетом обрабатывается
         // в раскладке стопки (см. ui()): там известно положение виджета.
-        kit::paint_block(ui.painter(), rect, t::BLOCK_STROKE);
+        kit::paint_block(ui.painter(), rect, t::BLOCK_STROKE());
 
         // Плашка ↔ мини: высота анимируется, текст сменяется кросс-фейдом.
         let full_alpha = ((rect.height() - t::MUSIC_MINI_H) / (t::MUSIC_H - t::MUSIC_MINI_H)).clamp(0.0, 1.0);
@@ -1986,8 +1987,8 @@ impl TimerApp {
             let mut mini = content.new_child(UiBuilder::new().max_rect(rect).id_salt("music_mini"));
             mini.multiply_opacity(1.0 - full_alpha);
             let cy = rect.center().y;
-            static_icon(&mini, Rect::from_center_size(pos2(rect.left() + 19.0, cy), vec2(14.0, 14.0)), ph::MUSIC_NOTES_SIMPLE, 14.0, false, t::TEXT_TERTIARY);
-            kit::text(&mini, pos2(rect.left() + 34.0, cy), Align2::LEFT_CENTER, "Ничего не играет", t::regular(12.0), t::TEXT_TERTIARY);
+            static_icon(&mini, Rect::from_center_size(pos2(rect.left() + 19.0, cy), vec2(14.0, 14.0)), ph::MUSIC_NOTES_SIMPLE, 14.0, false, t::TEXT_TERTIARY());
+            kit::text(&mini, pos2(rect.left() + 34.0, cy), Align2::LEFT_CENTER, "Ничего не играет", t::regular(12.0), t::TEXT_TERTIARY());
         }
 
         let Some(snap) = self.music_last.clone() else { return };
@@ -2008,8 +2009,8 @@ impl TimerApp {
                     .paint_at(&full, cover_r);
             }
             _ => {
-                full.painter().rect_filled(cover_r, t::RADIUS_CTRL, t::SURFACE_2);
-                static_icon(&full, cover_r, ph::MUSIC_NOTE, 18.0, false, t::TEXT_TERTIARY);
+                full.painter().rect_filled(cover_r, t::RADIUS_CTRL, t::SURFACE_2());
+                static_icon(&full, cover_r, ph::MUSIC_NOTE, 18.0, false, t::TEXT_TERTIARY());
             }
         }
 
@@ -2066,11 +2067,11 @@ impl TimerApp {
 
         let mut command = None;
         if snap.can_prev {
-            if kit::button(&full, prev_r, Id::new("m_prev"), Content::Icon { glyph: ph::SKIP_BACK, size: 16.0, fill: true }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), true).clicked() {
+            if kit::button(&full, prev_r, Id::new("m_prev"), Content::Icon { glyph: ph::SKIP_BACK, size: 16.0, fill: true }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), true).clicked() {
                 command = Some(MediaCmd::Previous);
             }
         } else {
-            static_icon(&full, prev_r, ph::SKIP_BACK, 16.0, true, t::TEXT_DISABLED);
+            static_icon(&full, prev_r, ph::SKIP_BACK, 16.0, true, t::TEXT_DISABLED());
         }
         if snap.can_toggle {
             let style = if snap.playing { ButtonStyle::accent(accent, t::RADIUS_CTRL) } else { ButtonStyle::secondary_bright(t::RADIUS_CTRL) };
@@ -2079,15 +2080,15 @@ impl TimerApp {
                 command = Some(MediaCmd::TogglePlayPause);
             }
         } else {
-            full.painter().rect_filled(play_r, t::RADIUS_CTRL, t::SURFACE_2);
-            static_icon(&full, play_r, if snap.playing { ph::PAUSE } else { ph::PLAY }, 16.0, true, t::TEXT_DISABLED);
+            full.painter().rect_filled(play_r, t::RADIUS_CTRL, t::SURFACE_2());
+            static_icon(&full, play_r, if snap.playing { ph::PAUSE } else { ph::PLAY }, 16.0, true, t::TEXT_DISABLED());
         }
         if snap.can_next {
-            if kit::button(&full, next_r, Id::new("m_next"), Content::Icon { glyph: ph::SKIP_FORWARD, size: 16.0, fill: true }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), true).clicked() {
+            if kit::button(&full, next_r, Id::new("m_next"), Content::Icon { glyph: ph::SKIP_FORWARD, size: 16.0, fill: true }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), true).clicked() {
                 command = Some(MediaCmd::Next);
             }
         } else {
-            static_icon(&full, next_r, ph::SKIP_FORWARD, 16.0, true, t::TEXT_DISABLED);
+            static_icon(&full, next_r, ph::SKIP_FORWARD, 16.0, true, t::TEXT_DISABLED());
         }
         if let Some(cmd) = command {
             if matches!(cmd, MediaCmd::TogglePlayPause) {
@@ -2099,12 +2100,12 @@ impl TimerApp {
         // Название и «исполнитель · источник».
         let text_left = cover_r.right() + 10.0;
         let text_w = (prev_r.left() - 10.0 - text_left).max(10.0);
-        let title_color = if snap.playing { t::TEXT_PRIMARY } else { t::TEXT_SECONDARY };
+        let title_color = if snap.playing { t::TEXT_PRIMARY() } else { t::TEXT_SECONDARY() };
         let title = if snap.title.trim().is_empty() { snap.source.clone() } else { snap.title.clone() };
         let sub_job = |max_width: f32| {
             let mut job = LayoutJob::default();
-            let artist_fmt = TextFormat { font_id: t::regular(11.0), color: t::TEXT_SECONDARY, ..Default::default() };
-            let source_fmt = TextFormat { font_id: t::regular(11.0), color: t::TEXT_TERTIARY, ..Default::default() };
+            let artist_fmt = TextFormat { font_id: t::regular(11.0), color: t::TEXT_SECONDARY(), ..Default::default() };
+            let source_fmt = TextFormat { font_id: t::regular(11.0), color: t::TEXT_TERTIARY(), ..Default::default() };
             if snap.artist.trim().is_empty() {
                 job.append(&snap.source, 0.0, source_fmt);
             } else {
@@ -2158,7 +2159,7 @@ impl TimerApp {
             match marquee {
                 None => {
                     let g = sub_ui.painter().layout_job(sub_job(text_w));
-                    kit::paint_galley(sub_ui.painter(), pos2(text_left, sub_row.center().y), Align2::LEFT_CENTER, g, t::TEXT_SECONDARY);
+                    kit::paint_galley(sub_ui.painter(), pos2(text_left, sub_row.center().y), Align2::LEFT_CENTER, g, t::TEXT_SECONDARY());
                 }
                 Some((_, off)) => {
                     self.paint_marquee_line(&sub_ui, sub_row, sub_full, off, d_sub, "mq_sub");
@@ -2173,15 +2174,15 @@ impl TimerApp {
             job.append(
                 &fmt_track_time(fraction * snap.duration_secs),
                 0.0,
-                TextFormat { font_id: t::mono_medium(11.0), color: t::TEXT_PRIMARY, ..Default::default() },
+                TextFormat { font_id: t::mono_medium(11.0), color: t::TEXT_PRIMARY(), ..Default::default() },
             );
             job.append(
                 &format!(" / {}", fmt_track_time(snap.duration_secs)),
                 0.0,
-                TextFormat { font_id: t::mono(11.0), color: t::TEXT_TERTIARY, ..Default::default() },
+                TextFormat { font_id: t::mono(11.0), color: t::TEXT_TERTIARY(), ..Default::default() },
             );
             let g = time_ui.painter().layout_job(job);
-            kit::paint_galley(time_ui.painter(), pos2(text_left, sub_row.center().y), Align2::LEFT_CENTER, g, t::TEXT_PRIMARY);
+            kit::paint_galley(time_ui.painter(), pos2(text_left, sub_row.center().y), Align2::LEFT_CENTER, g, t::TEXT_PRIMARY());
         }
 
         // Полоска прогресса: покой — высота 2; наведение и перетаскивание — 4,
@@ -2211,13 +2212,13 @@ impl TimerApp {
             let bottom = full_rect.bottom() - 4.0;
             let track = Rect::from_min_max(pos2(track_l, bottom - bar_h), pos2(track_l + track_w, bottom));
             let radius: u8 = if bar_h > 3.0 { 2 } else { 1 };
-            full.painter().rect_filled(track, radius, t::LINE);
+            full.painter().rect_filled(track, radius, t::LINE());
             let fill_r = Rect::from_min_max(track.min, pos2(track_l + track_w * shown.clamp(0.0, 1.0), bottom));
-            full.painter().rect_filled(fill_r, radius, if snap.playing { accent } else { t::TEXT_TERTIARY });
+            full.painter().rect_filled(fill_r, radius, if snap.playing { accent } else { t::TEXT_TERTIARY() });
             let knob_d = 8.0 * hover_t + 2.0 * grab_t;
             if knob_d > 0.5 {
                 let center = pos2(track_l + track_w * shown.clamp(0.0, 1.0), full_rect.top() + 50.0);
-                full.painter().circle_filled(center, knob_d / 2.0, t::KNOB);
+                full.painter().circle_filled(center, knob_d / 2.0, t::KNOB());
             }
         }
     }
@@ -2329,7 +2330,7 @@ impl TimerApp {
         let painter = ui.painter().with_clip_rect(row);
         let g_h = galley.size().y;
         // Цвета уже заданы в самом тексте, третий аргумент — только запасной.
-        painter.galley(pos2(row.left() - off, row.center().y - g_h / 2.0), galley, t::TEXT_PRIMARY);
+        painter.galley(pos2(row.left() - off, row.center().y - g_h / 2.0), galley, t::TEXT_PRIMARY());
         if overflow <= 0.5 {
             return;
         }
@@ -2340,7 +2341,7 @@ impl TimerApp {
             if alpha <= 0.0 {
                 return;
             }
-            let solid = t::BLOCK_BG.gamma_multiply(alpha);
+            let solid = t::BLOCK_BG().gamma_multiply(alpha);
             let (l, r) = if solid_left { (solid, Color32::TRANSPARENT) } else { (Color32::TRANSPARENT, solid) };
             let mut mesh = egui::Mesh::default();
             mesh.colored_vertex(rect.left_top(), l);
@@ -2368,7 +2369,7 @@ impl TimerApp {
 
     fn draw_notes(&mut self, ui: &mut Ui, rect: Rect, accent: Color32) {
         let ctx = ui.ctx().clone();
-        kit::paint_block(ui.painter(), rect, t::BLOCK_STROKE);
+        kit::paint_block(ui.painter(), rect, t::BLOCK_STROKE());
         let inner = rect.shrink(t::BLOCK_PAD);
         let (left, w) = (inner.left(), inner.width());
         let mut y = inner.top();
@@ -2377,14 +2378,14 @@ impl TimerApp {
         let head = Rect::from_min_size(pos2(left, y), vec2(w, 28.0));
         let drag = ui.interact(head, Id::new("notes_drag"), Sense::click_and_drag());
         handle_window_drag(&ctx, &drag);
-        let title_r = kit::text(ui, pos2(left, head.center().y), Align2::LEFT_CENTER, "Заметки", t::medium(15.0), t::TEXT_PRIMARY);
+        let title_r = kit::text(ui, pos2(left, head.center().y), Align2::LEFT_CENTER, "Заметки", t::medium(15.0), t::TEXT_PRIMARY());
         let open_count = self.state.notes.iter().filter(|n| !n.done).count();
         if open_count > 0 {
-            kit::text(ui, pos2(title_r.right() + 8.0, head.center().y + 1.0), Align2::LEFT_CENTER, &open_count.to_string(), t::mono(12.0), t::TEXT_TERTIARY);
+            kit::text(ui, pos2(title_r.right() + 8.0, head.center().y + 1.0), Align2::LEFT_CENTER, &open_count.to_string(), t::mono(12.0), t::TEXT_TERTIARY());
         }
         let btn = |x: f32| Rect::from_min_size(pos2(x, head.top()), vec2(28.0, 28.0));
         let mut bx = head.right() - 28.0;
-        if kit::button(ui, btn(bx), Id::new("notes_close"), Content::Icon { glyph: ph::X, size: 14.0, fill: false }, ButtonStyle::ghost(t::TEXT_TERTIARY, t::RADIUS_CTRL), true)
+        if kit::button(ui, btn(bx), Id::new("notes_close"), Content::Icon { glyph: ph::X, size: 14.0, fill: false }, ButtonStyle::ghost(t::TEXT_TERTIARY(), t::RADIUS_CTRL), true)
             .on_hover_text("Скрыть заметки")
             .clicked()
         {
@@ -2393,7 +2394,7 @@ impl TimerApp {
         }
         bx -= 30.0;
         // Сортировка — выпадающее меню под кнопкой. Не по умолчанию — иконка в акценте.
-        let sort_color = if self.config.notes_sort == NotesSort::default() { t::TEXT_SECONDARY } else { accent };
+        let sort_color = if self.config.notes_sort == NotesSort::default() { t::TEXT_SECONDARY() } else { accent };
         let sort_resp = kit::button(ui, btn(bx), Id::new("notes_sort"), Content::Icon { glyph: ph::SORT_ASCENDING, size: 16.0, fill: false }, ButtonStyle::ghost(sort_color, t::RADIUS_CTRL), true)
             .on_hover_text(format!("Сортировка: {}", self.config.notes_sort.label()));
         if let Some(chosen) = self.sort_menu(&sort_resp, accent) {
@@ -2403,7 +2404,7 @@ impl TimerApp {
             }
         }
         bx -= 30.0;
-        let search_color = if self.notes_search_open { accent } else { t::TEXT_SECONDARY };
+        let search_color = if self.notes_search_open { accent } else { t::TEXT_SECONDARY() };
         if kit::button(ui, btn(bx), Id::new("notes_search_btn"), Content::Icon { glyph: ph::MAGNIFYING_GLASS, size: 16.0, fill: false }, ButtonStyle::ghost(search_color, t::RADIUS_CTRL), true)
             .on_hover_text("Поиск")
             .clicked()
@@ -2438,8 +2439,8 @@ impl TimerApp {
         const W: f32 = 200.0;
         let current = self.config.notes_sort;
         let frame = egui::Frame::NONE
-            .fill(t::SURFACE_1)
-            .stroke(Stroke::new(1.0, t::LINE))
+            .fill(t::SURFACE_1())
+            .stroke(Stroke::new(1.0, t::LINE()))
             .corner_radius(t::RADIUS_CTRL)
             .inner_margin(6.0);
         let mut chosen = None;
@@ -2456,7 +2457,7 @@ impl TimerApp {
                     let selected = sort == current;
                     if resp.hovered() {
                         ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
-                        ui.painter().rect_filled(r, t::RADIUS_CHIP, t::SURFACE_3);
+                        ui.painter().rect_filled(r, t::RADIUS_CHIP, t::SURFACE_3());
                     } else if selected {
                         ui.painter().rect_filled(r, t::RADIUS_CHIP, t::tint(accent, 0x22));
                     }
@@ -2467,8 +2468,8 @@ impl TimerApp {
                         NotesSort::Alpha => ph::TEXT_AA,
                         NotesSort::Folder => ph::FOLDER_SIMPLE,
                     };
-                    let color = if selected { accent } else { t::TEXT_PRIMARY };
-                    static_icon(ui, Rect::from_center_size(pos2(r.left() + 14.0, r.center().y), vec2(14.0, 14.0)), glyph, 14.0, false, if selected { accent } else { t::TEXT_SECONDARY });
+                    let color = if selected { accent } else { t::TEXT_PRIMARY() };
+                    static_icon(ui, Rect::from_center_size(pos2(r.left() + 14.0, r.center().y), vec2(14.0, 14.0)), glyph, 14.0, false, if selected { accent } else { t::TEXT_SECONDARY() });
                     kit::text(ui, pos2(r.left() + 30.0, r.center().y), Align2::LEFT_CENTER, sort.label(), t::regular(13.0), color);
                     if selected {
                         static_icon(ui, Rect::from_center_size(pos2(r.right() - 14.0, r.center().y), vec2(14.0, 14.0)), ph::CHECK, 14.0, false, accent);
@@ -2565,7 +2566,7 @@ impl TimerApp {
         let tail = rect_of(chips.len());
         if editing == Some(None) {
             folder_edit_field(ui, tail, &mut edit_text, &mut edit_done, accent);
-        } else if kit::button(ui, tail, Id::new("folder_add"), Content::Icon { glyph: ph::PLUS, size: 14.0, fill: false }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CHIP), true)
+        } else if kit::button(ui, tail, Id::new("folder_add"), Content::Icon { glyph: ph::PLUS, size: 14.0, fill: false }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CHIP), true)
             .on_hover_text("Новая папка")
             .clicked()
         {
@@ -2646,9 +2647,9 @@ impl TimerApp {
             } else {
                 "Пока пусто"
             };
-            kit::text(ui, c - vec2(0.0, 22.0), Align2::CENTER_CENTER, title, t::medium(13.0), t::TEXT_SECONDARY);
-            kit::text(ui, c, Align2::CENTER_CENTER, "Напишите заметку ниже", t::regular(12.0), t::TEXT_TERTIARY);
-            kit::text(ui, c + vec2(0.0, 18.0), Align2::CENTER_CENTER, "или скажите «Джарвис, заметка …»", t::regular(12.0), t::TEXT_TERTIARY);
+            kit::text(ui, c - vec2(0.0, 22.0), Align2::CENTER_CENTER, title, t::medium(13.0), t::TEXT_SECONDARY());
+            kit::text(ui, c, Align2::CENTER_CENTER, "Напишите заметку ниже", t::regular(12.0), t::TEXT_TERTIARY());
+            kit::text(ui, c + vec2(0.0, 18.0), Align2::CENTER_CENTER, "или скажите «Джарвис, заметка …»", t::regular(12.0), t::TEXT_TERTIARY());
             return;
         }
 
@@ -2700,13 +2701,13 @@ impl TimerApp {
                         self.notes_done_open = !self.notes_done_open;
                     }
                     let caret = if self.notes_done_open { ph::CARET_DOWN } else { ph::CARET_RIGHT };
-                    static_icon(ui, Rect::from_center_size(pos2(hr.left() + 8.0, hr.center().y), vec2(12.0, 12.0)), caret, 12.0, false, t::TEXT_TERTIARY);
-                    kit::text(ui, pos2(hr.left() + 20.0, hr.center().y), Align2::LEFT_CENTER, &format!("Выполнено · {}", done.len()), t::regular(12.0), t::TEXT_SECONDARY);
+                    static_icon(ui, Rect::from_center_size(pos2(hr.left() + 8.0, hr.center().y), vec2(12.0, 12.0)), caret, 12.0, false, t::TEXT_TERTIARY());
+                    kit::text(ui, pos2(hr.left() + 20.0, hr.center().y), Align2::LEFT_CENTER, &format!("Выполнено · {}", done.len()), t::regular(12.0), t::TEXT_SECONDARY());
                     let clear_r = Rect::from_min_size(pos2(hr.right() - 92.0, hr.top()), vec2(92.0, 28.0));
                     if kit::button(
                         ui, clear_r, Id::new("notes_clear_done"),
                         Content::IconText { glyph: ph::BROOM, size: 13.0, fill: false, label: "Очистить", font: t::regular(12.0), gap: 5.0 },
-                        ButtonStyle::ghost(t::TEXT_TERTIARY, t::RADIUS_CTRL), true,
+                        ButtonStyle::ghost(t::TEXT_TERTIARY(), t::RADIUS_CTRL), true,
                     )
                     .on_hover_text("Удалить выполненные из этого списка")
                     .clicked()
@@ -2763,14 +2764,14 @@ impl TimerApp {
         let expanded = self.notes_expanded == Some(id) || open_part;
         let painter = ui.painter().clone();
         let stroke = if expanded { t::tint(accent, 0x55) } else { Color32::TRANSPARENT };
-        painter.rect(row, t::RADIUS_CTRL, t::SURFACE_1, Stroke::new(1.0, stroke), StrokeKind::Inside);
+        painter.rect(row, t::RADIUS_CTRL, t::SURFACE_1(), Stroke::new(1.0, stroke), StrokeKind::Inside);
 
         let head = Rect::from_min_size(row.min, vec2(row.width(), 36.0));
         // Клик по строке раскрывает её. Регистрируется до галочки, чтобы та забирала свой клик.
         let head_resp = ui.interact(head, Id::new(("note_head", id)), Sense::click());
         let hover = ui.ctx().animate_bool_with_time(Id::new(("note_hover", id)), head_resp.hovered() && !expanded, t::ANIM_HOVER);
         if hover > 0.01 {
-            painter.rect_filled(head, t::RADIUS_CTRL, t::tint(t::TEXT_PRIMARY, (hover * 10.0) as u8));
+            painter.rect_filled(head, t::RADIUS_CTRL, t::tint(t::TEXT_PRIMARY(), (hover * 10.0) as u8));
         }
         if head_resp.hovered() {
             ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
@@ -2813,9 +2814,9 @@ impl TimerApp {
         let mut right = head.right() - 10.0;
         if let Some(r) = &note.reminder {
             let color = if note.done {
-                t::TEXT_TERTIARY
+                t::TEXT_TERTIARY()
             } else if note.overdue() {
-                t::DANGER
+                t::DANGER()
             } else {
                 accent
             };
@@ -2824,20 +2825,20 @@ impl TimerApp {
             static_icon(ui, Rect::from_center_size(pos2(tr.left() - 8.0, cy), vec2(12.0, 12.0)), glyph, 11.0, false, color);
             right = tr.left() - 20.0;
         } else if let Some((d, n)) = note.progress() {
-            let tr = kit::text(ui, pos2(right, cy), Align2::RIGHT_CENTER, &format!("{d}/{n}"), t::mono(11.0), t::TEXT_SECONDARY);
+            let tr = kit::text(ui, pos2(right, cy), Align2::RIGHT_CENTER, &format!("{d}/{n}"), t::mono(11.0), t::TEXT_SECONDARY());
             right = tr.left() - 8.0;
         }
 
-        let color = if note.done { t::TEXT_TERTIARY } else { t::TEXT_PRIMARY };
+        let color = if note.done { t::TEXT_TERTIARY() } else { t::TEXT_PRIMARY() };
         let title = if note.title.trim().is_empty() { "Без названия" } else { note.title.as_str() };
         let tr = kit::text_trunc(ui, pos2(x, cy), Align2::LEFT_CENTER, title, t::regular(13.0), color, (right - x).max(24.0));
         if note.done {
-            painter.line_segment([pos2(tr.left(), cy + 0.5), pos2(tr.right(), cy + 0.5)], Stroke::new(1.0, t::TEXT_TERTIARY));
+            painter.line_segment([pos2(tr.left(), cy + 0.5), pos2(tr.right(), cy + 0.5)], Stroke::new(1.0, t::TEXT_TERTIARY()));
         }
         // Полоска прогресса чек-листа под свёрнутой строкой.
         if let (Some((d, n)), false) = (note.progress(), expanded) {
             let bar = Rect::from_min_size(pos2(x, head.bottom() - 5.0), vec2(head.right() - 10.0 - x, 2.0));
-            painter.rect_filled(bar, 1u8, t::LINE);
+            painter.rect_filled(bar, 1u8, t::LINE());
             painter.rect_filled(Rect::from_min_size(bar.min, vec2(bar.width() * d as f32 / n as f32, 2.0)), 1u8, accent);
         }
 
@@ -2890,7 +2891,7 @@ impl TimerApp {
                     .margin(egui::Margin::ZERO)
                     .return_key(None)
                     .font(t::regular(12.0))
-                    .text_color(if item.done { t::TEXT_TERTIARY } else { t::TEXT_PRIMARY })
+                    .text_color(if item.done { t::TEXT_TERTIARY() } else { t::TEXT_PRIMARY() })
                     .desired_rows(1)
                     .desired_width(tr.width());
                 changed |= ui.place(tr, edit).changed();
@@ -2898,7 +2899,7 @@ impl TimerApp {
                     item.text = item.text.replace(['\r', '\n'], " ");
                 }
                 let xr = Rect::from_center_size(pos2(left + w - 11.0, cy), vec2(22.0, 22.0));
-                if kit::button(ui, xr, Id::new(("item_x", id, k)), Content::Icon { glyph: ph::X, size: 12.0, fill: false }, ButtonStyle::ghost(t::TEXT_TERTIARY, t::RADIUS_CHIP), true)
+                if kit::button(ui, xr, Id::new(("item_x", id, k)), Content::Icon { glyph: ph::X, size: 12.0, fill: false }, ButtonStyle::ghost(t::TEXT_TERTIARY(), t::RADIUS_CHIP), true)
                     .on_hover_text("Удалить пункт")
                     .clicked()
                 {
@@ -2933,7 +2934,7 @@ impl TimerApp {
         // Напоминание.
         let row = Rect::from_min_size(pos2(left, y), vec2(w, 28.0));
         if let Some(r) = self.state.notes[idx].reminder.clone() {
-            let color = if self.state.notes[idx].overdue() { t::DANGER } else { accent };
+            let color = if self.state.notes[idx].overdue() { t::DANGER() } else { accent };
             let glyph = if r.repeat == Repeat::Once { ph::BELL } else { ph::REPEAT };
             static_icon(ui, Rect::from_center_size(pos2(left + 8.0, row.center().y), vec2(14.0, 14.0)), glyph, 14.0, false, color);
             let mut label = notes::format_when(&r, now);
@@ -2942,7 +2943,7 @@ impl TimerApp {
             }
             kit::text(ui, pos2(left + 22.0, row.center().y), Align2::LEFT_CENTER, &label, t::regular(12.0), color);
             let xr = Rect::from_min_size(pos2(row.right() - 72.0, row.top()), vec2(72.0, 28.0));
-            if kit::button(ui, xr, Id::new(("rem_clear", id)), Content::Text { label: "Убрать", font: t::regular(12.0) }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), true).clicked() {
+            if kit::button(ui, xr, Id::new(("rem_clear", id)), Content::Text { label: "Убрать", font: t::regular(12.0) }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), true).clicked() {
                 self.state.notes[idx].reminder = None;
                 changed = true;
             }
@@ -2953,7 +2954,7 @@ impl TimerApp {
                 ui.ctx().request_repaint_after(Duration::from_millis(500));
             }
             let hint = if failed { "Не понял — например «завтра в 9»" } else { "Напомнить: завтра в 9, через 20 минут…" };
-            let resp = text_field(ui, row, Id::new(("rem_input", id)), &mut self.reminder_input, hint, if failed { t::DANGER } else { accent });
+            let resp = text_field(ui, row, Id::new(("rem_input", id)), &mut self.reminder_input, hint, if failed { t::DANGER() } else { accent });
             if enter(ui, &resp) && !self.reminder_input.trim().is_empty() {
                 match notes::parse_when_text(&self.reminder_input, now) {
                     Some(when) => {
@@ -3011,7 +3012,7 @@ impl TimerApp {
         // Низ: дата создания и «Удалить».
         let created = self.state.notes[idx].created;
         let date = format!("Создано {} {}", created.day(), MONTHS_GENITIVE[created.month0() as usize]);
-        kit::text(ui, pos2(left, y + 13.0), Align2::LEFT_CENTER, &date, t::regular(11.0), t::TEXT_TERTIARY);
+        kit::text(ui, pos2(left, y + 13.0), Align2::LEFT_CENTER, &date, t::regular(11.0), t::TEXT_TERTIARY());
         let del = Rect::from_min_size(pos2(left + w - 92.0, y), vec2(92.0, 26.0));
         if kit::button(
             ui, del, Id::new(("note_del", id)),
@@ -3064,16 +3065,16 @@ impl TimerApp {
     }
 
     fn draw_menu(&mut self, ui: &mut Ui, rect: Rect, accent: Color32) {
-        kit::paint_block(ui.painter(), rect, t::BLOCK_STROKE);
+        kit::paint_block(ui.painter(), rect, t::BLOCK_STROKE());
 
         // Переключатель вкладок: трек 326×36, четыре вкладки по 78,5 px,
         // подложка активной вкладки едет по x с шагом 80,5.
         let track = Rect::from_min_size(rect.min + vec2(t::BLOCK_PAD, t::BLOCK_PAD), vec2(rect.width() - 2.0 * t::BLOCK_PAD, 36.0));
-        ui.painter().rect_filled(track, t::RADIUS_BTN_LG, t::SURFACE_SUNKEN);
+        ui.painter().rect_filled(track, t::RADIUS_BTN_LG, t::SURFACE_SUNKEN());
         let tab_w = (track.width() - 6.0 - 6.0) / 4.0;
         let slide = ui.ctx().animate_value_with_time(Id::new("tab_slide"), self.tab.index() as f32, t::ANIM_TAB);
         let pill = Rect::from_min_size(pos2(track.left() + 3.0 + slide * (tab_w + 2.0), track.top() + 3.0), vec2(tab_w, 30.0));
-        ui.painter().rect_filled(pill, t::RADIUS_CTRL, t::SURFACE_3);
+        ui.painter().rect_filled(pill, t::RADIUS_CTRL, t::SURFACE_3());
         let tabs = [
             (Tab::Timers, "Таймеры", ph::HOURGLASS_MEDIUM),
             (Tab::Calendar, "История", ph::CALENDAR_BLANK),
@@ -3088,7 +3089,7 @@ impl TimerApp {
             }
             let it = kit::interaction(ui, &resp, true);
             let active = self.tab == tab;
-            let color = if active { t::TEXT_PRIMARY } else { kit::lerp(t::TEXT_SECONDARY, t::TEXT_PRIMARY, it.hover) };
+            let color = if active { t::TEXT_PRIMARY() } else { kit::lerp(t::TEXT_SECONDARY(), t::TEXT_PRIMARY(), it.hover) };
             // v2: иконка 14 и подпись 12, зазор 5.
             let ig = kit::galley(ui, glyph, t::icon(14.0, false), color);
             let tg = kit::galley(ui, label, t::medium(12.0), color);
@@ -3133,16 +3134,16 @@ impl TimerApp {
         let name_r = Rect::from_min_size(pos2(left, y), vec2(w, 36.0));
         let name_focused = ui.memory(|m| m.has_focus(name_id));
         ui.painter().rect(
-            name_r, t::RADIUS_CTRL, t::SURFACE_2,
-            Stroke::new(1.0, if name_focused { accent } else { t::BLOCK_STROKE }),
+            name_r, t::RADIUS_CTRL, t::SURFACE_2(),
+            Stroke::new(1.0, if name_focused { accent } else { t::BLOCK_STROKE() }),
             StrokeKind::Inside,
         );
         let edit = egui::TextEdit::singleline(&mut self.new_name)
             .id(name_id)
             .frame(egui::Frame::NONE)
-            .hint_text(egui::RichText::new("Название (необязательно)").color(t::TEXT_TERTIARY))
+            .hint_text(egui::RichText::new("Название (необязательно)").color(t::TEXT_TERTIARY()))
             .font(t::regular(13.0))
-            .text_color(t::TEXT_PRIMARY)
+            .text_color(t::TEXT_PRIMARY())
             .vertical_align(egui::Align::Center)
             .desired_width(w - 22.0);
         ui.place(name_r.shrink2(vec2(11.0, 0.0)), edit);
@@ -3157,7 +3158,7 @@ impl TimerApp {
             let value = match i { 0 => &mut self.new_h, 1 => &mut self.new_m, _ => &mut self.new_s };
             kit::hms_field(ui, r, Id::new(("hms", i)), value, max, unit, accent);
             if i < 2 {
-                kit::text(ui, pos2(r.right() + 6.0, r.center().y), Align2::CENTER_CENTER, ":", t::mono(18.0), t::TEXT_DISABLED);
+                kit::text(ui, pos2(r.right() + 6.0, r.center().y), Align2::CENTER_CENTER, ":", t::mono(18.0), t::TEXT_DISABLED());
             }
         }
         y += 52.0 + 8.0;
@@ -3207,17 +3208,17 @@ impl TimerApp {
         let list_rect = Rect::from_min_max(pos2(left, y), area.max);
         if self.state.active_timers.is_empty() {
             let cy = list_rect.center().y - 20.0;
-            ui.painter().circle_filled(pos2(list_rect.center().x, cy - 33.0), 24.0, t::SURFACE_1);
-            static_icon(ui, Rect::from_center_size(pos2(list_rect.center().x, cy - 33.0), vec2(48.0, 48.0)), ph::HOURGLASS_MEDIUM, 24.0, false, t::TEXT_TERTIARY);
-            kit::text(ui, pos2(list_rect.center().x, cy + 8.0), Align2::CENTER_CENTER, "Нет таймеров", t::medium(13.0), t::TEXT_PRIMARY);
+            ui.painter().circle_filled(pos2(list_rect.center().x, cy - 33.0), 24.0, t::SURFACE_1());
+            static_icon(ui, Rect::from_center_size(pos2(list_rect.center().x, cy - 33.0), vec2(48.0, 48.0)), ph::HOURGLASS_MEDIUM, 24.0, false, t::TEXT_TERTIARY());
+            kit::text(ui, pos2(list_rect.center().x, cy + 8.0), Align2::CENTER_CENTER, "Нет таймеров", t::medium(13.0), t::TEXT_PRIMARY());
             let g = ui.painter().layout(
                 "Задайте время выше или выберите пресет — таймер появится здесь".to_owned(),
-                t::regular(12.0), t::TEXT_TERTIARY, 220.0,
+                t::regular(12.0), t::TEXT_TERTIARY(), 220.0,
             );
             let mut job = (*g.job).clone();
             job.halign = egui::Align::Center;
             let g = ui.painter().layout_job(job);
-            kit::paint_galley_centered(ui.painter(), pos2(list_rect.center().x, cy + 26.0), g, t::TEXT_TERTIARY);
+            kit::paint_galley_centered(ui.painter(), pos2(list_rect.center().x, cy + 26.0), g, t::TEXT_TERTIARY());
             return;
         }
 
@@ -3286,7 +3287,7 @@ impl TimerApp {
                     row_ui.multiply_opacity(r.alpha);
                     row_ui.set_clip_rect(Rect::from_min_size(slot.min, vec2(row_w, h)).intersect(ui.clip_rect()));
                     let painter = row_ui.painter().clone();
-                    painter.rect_filled(full, t::RADIUS_CTRL, t::SURFACE_1);
+                    painter.rect_filled(full, t::RADIUS_CTRL, t::SURFACE_1());
                     let cy = full.center().y;
                     let enabled = !r.dying;
 
@@ -3295,8 +3296,8 @@ impl TimerApp {
                     let stop_r = trash_r.translate(vec2(-32.0, 0.0));
                     let play_r = stop_r.translate(vec2(-32.0, 0.0));
 
-                    let pin_color = if r.pinned { accent } else { t::TEXT_TERTIARY };
-                    let pin_style = ButtonStyle { hover_color: if r.pinned { accent } else { t::TEXT_PRIMARY }, ..ButtonStyle::ghost(pin_color, t::RADIUS_CTRL) };
+                    let pin_color = if r.pinned { accent } else { t::TEXT_TERTIARY() };
+                    let pin_style = ButtonStyle { hover_color: if r.pinned { accent } else { t::TEXT_PRIMARY() }, ..ButtonStyle::ghost(pin_color, t::RADIUS_CTRL) };
                     if kit::button(&row_ui, pin_r, Id::new(("pin", r.id)), Content::Icon { glyph: ph::PUSH_PIN, size: 16.0, fill: r.pinned }, pin_style, enabled)
                         .on_hover_text("Показывать в виджете")
                         .clicked()
@@ -3309,7 +3310,7 @@ impl TimerApp {
                     if kit::button(&row_ui, play_r, Id::new(("play", r.id)), Content::Icon { glyph, size: 14.0, fill: true }, play_style, enabled).clicked() {
                         actions.push(RowAction::Toggle(r.id));
                     }
-                    if kit::button(&row_ui, stop_r, Id::new(("stop", r.id)), Content::Icon { glyph: ph::STOP, size: 14.0, fill: true }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), enabled)
+                    if kit::button(&row_ui, stop_r, Id::new(("stop", r.id)), Content::Icon { glyph: ph::STOP, size: 14.0, fill: true }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), enabled)
                         .on_hover_text("Остановить и записать в историю")
                         .clicked()
                     {
@@ -3326,10 +3327,10 @@ impl TimerApp {
                     let tw = play_r.left() - 4.0 - tx;
                     let top = full.top() + 4.0;
                     static_icon(&row_ui, Rect::from_center_size(pos2(tx + 5.5, top + 8.0), vec2(11.0, 16.0)),
-                        if r.stopwatch { ph::TIMER } else { ph::HOURGLASS_MEDIUM }, 11.0, false, t::TEXT_SECONDARY);
-                    kit::text_trunc(&row_ui, pos2(tx + 15.0, top + 8.0), Align2::LEFT_CENTER, &r.name, t::regular(12.0), t::TEXT_SECONDARY, tw - 15.0);
+                        if r.stopwatch { ph::TIMER } else { ph::HOURGLASS_MEDIUM }, 11.0, false, t::TEXT_SECONDARY());
+                    kit::text_trunc(&row_ui, pos2(tx + 15.0, top + 8.0), Align2::LEFT_CENTER, &r.name, t::regular(12.0), t::TEXT_SECONDARY(), tw - 15.0);
                     kit::text(&row_ui, pos2(tx, top + 16.0 + 10.0), Align2::LEFT_CENTER, &r.time, t::mono_medium(15.0),
-                        if r.finished { t::DANGER } else { t::TEXT_PRIMARY });
+                        if r.finished { t::DANGER() } else { t::TEXT_PRIMARY() });
                 }
             });
 
@@ -3356,13 +3357,13 @@ impl TimerApp {
 
         // Заголовок месяца и стрелки.
         kit::text(ui, pos2(left, y + 14.0), Align2::LEFT_CENTER,
-            &format!("{} {}", MONTHS_RU[(month.month() - 1) as usize], month.year()), t::medium(15.0), t::TEXT_PRIMARY);
+            &format!("{} {}", MONTHS_RU[(month.month() - 1) as usize], month.year()), t::medium(15.0), t::TEXT_PRIMARY());
         let next_r = Rect::from_min_size(pos2(area.right() - 28.0, y), vec2(28.0, 28.0));
         let prev_r = next_r.translate(vec2(-32.0, 0.0));
-        if kit::button(ui, prev_r, Id::new("cal_prev"), Content::Icon { glyph: ph::CARET_LEFT, size: 16.0, fill: false }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), true).clicked() {
+        if kit::button(ui, prev_r, Id::new("cal_prev"), Content::Icon { glyph: ph::CARET_LEFT, size: 16.0, fill: false }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), true).clicked() {
             self.cal_month = shift_month(month, -1);
         }
-        if kit::button(ui, next_r, Id::new("cal_next"), Content::Icon { glyph: ph::CARET_RIGHT, size: 16.0, fill: false }, ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), true).clicked() {
+        if kit::button(ui, next_r, Id::new("cal_next"), Content::Icon { glyph: ph::CARET_RIGHT, size: 16.0, fill: false }, ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), true).clicked() {
             self.cal_month = shift_month(month, 1);
         }
         y += 28.0 + 8.0;
@@ -3370,7 +3371,7 @@ impl TimerApp {
         // Дни недели и сетка: ячейки 44×30, зазор 3.
         let cell_w = (w - 18.0) / 7.0;
         for (i, d) in WEEKDAYS.iter().enumerate() {
-            kit::text(ui, pos2(left + i as f32 * (cell_w + 3.0) + cell_w / 2.0, y + 10.0), Align2::CENTER_CENTER, d, t::regular(11.0), t::TEXT_TERTIARY);
+            kit::text(ui, pos2(left + i as f32 * (cell_w + 3.0) + cell_w / 2.0, y + 10.0), Align2::CENTER_CENTER, d, t::regular(11.0), t::TEXT_TERTIARY());
         }
         y += 20.0 + 4.0;
         let offset = month.weekday().num_days_from_monday() as i32;
@@ -3400,12 +3401,12 @@ impl TimerApp {
             if selected {
                 ui.painter().rect_filled(r, t::RADIUS_CTRL, accent);
             } else {
-                ui.painter().rect_filled(r, t::RADIUS_CTRL, kit::lerp(Color32::TRANSPARENT, t::SURFACE_2, it.hover));
+                ui.painter().rect_filled(r, t::RADIUS_CTRL, kit::lerp(Color32::TRANSPARENT, t::SURFACE_2(), it.hover));
                 if is_today {
                     ui.painter().rect_stroke(r, t::RADIUS_CTRL, Stroke::new(1.0, accent), StrokeKind::Inside);
                 }
             }
-            let color = if selected { on_accent } else if date > today { t::TEXT_TERTIARY } else { t::TEXT_PRIMARY };
+            let color = if selected { on_accent } else if date > today { t::TEXT_TERTIARY() } else { t::TEXT_PRIMARY() };
             let font = if selected || is_today { t::medium(13.0) } else { t::regular(13.0) };
             kit::text(ui, pos2(r.center().x, r.center().y - 2.0), Align2::CENTER_CENTER, &day_num.to_string(), font, color);
             if has_data {
@@ -3435,9 +3436,9 @@ impl TimerApp {
         ];
         for (i, (caption, value)) in totals.iter().enumerate() {
             let r = Rect::from_min_size(pos2(left + i as f32 * (half + 8.0), y), vec2(half, 44.0));
-            ui.painter().rect_filled(r, t::RADIUS_CTRL, t::SURFACE_1);
-            kit::text_trunc(ui, pos2(r.left() + 11.0, r.top() + 4.0 + 7.0), Align2::LEFT_CENTER, caption, t::regular(11.0), t::TEXT_TERTIARY, half - 22.0);
-            kit::text(ui, pos2(r.left() + 11.0, r.top() + 4.0 + 16.0 + 10.0), Align2::LEFT_CENTER, value, t::medium(15.0), t::TEXT_PRIMARY);
+            ui.painter().rect_filled(r, t::RADIUS_CTRL, t::SURFACE_1());
+            kit::text_trunc(ui, pos2(r.left() + 11.0, r.top() + 4.0 + 7.0), Align2::LEFT_CENTER, caption, t::regular(11.0), t::TEXT_TERTIARY(), half - 22.0);
+            kit::text(ui, pos2(r.left() + 11.0, r.top() + 4.0 + 16.0 + 10.0), Align2::LEFT_CENTER, value, t::medium(15.0), t::TEXT_PRIMARY());
         }
         y += 44.0 + 8.0;
 
@@ -3452,10 +3453,10 @@ impl TimerApp {
 
         if indices.is_empty() {
             let cy = list_rect.center().y - 10.0;
-            static_icon(ui, Rect::from_center_size(pos2(list_rect.center().x, cy - 24.0), vec2(24.0, 24.0)), ph::CALENDAR_X, 24.0, false, t::TEXT_TERTIARY);
-            kit::text(ui, pos2(list_rect.center().x, cy), Align2::CENTER_CENTER, &format!("Нет записей за {}", day_label), t::medium(13.0), t::TEXT_PRIMARY);
+            static_icon(ui, Rect::from_center_size(pos2(list_rect.center().x, cy - 24.0), vec2(24.0, 24.0)), ph::CALENDAR_X, 24.0, false, t::TEXT_TERTIARY());
+            kit::text(ui, pos2(list_rect.center().x, cy), Align2::CENTER_CENTER, &format!("Нет записей за {}", day_label), t::medium(13.0), t::TEXT_PRIMARY());
             // «■» берём из Phosphor: такого символа может не быть в текстовом шрифте.
-            let fmt = TextFormat { font_id: t::regular(12.0), color: t::TEXT_TERTIARY, ..Default::default() };
+            let fmt = TextFormat { font_id: t::regular(12.0), color: t::TEXT_TERTIARY(), ..Default::default() };
             let mut job = LayoutJob::default();
             job.append("Остановите таймер кнопкой ", 0.0, fmt.clone());
             job.append(ph::STOP, 0.0, TextFormat { font_id: t::icon(11.0, true), ..fmt.clone() });
@@ -3463,7 +3464,7 @@ impl TimerApp {
             job.wrap.max_width = w;
             job.halign = egui::Align::Center;
             let g = ui.painter().layout_job(job);
-            kit::paint_galley_centered(ui.painter(), pos2(list_rect.center().x, cy + 12.0), g, t::TEXT_TERTIARY);
+            kit::paint_galley_centered(ui.painter(), pos2(list_rect.center().x, cy + 12.0), g, t::TEXT_TERTIARY());
             return;
         }
 
@@ -3482,7 +3483,7 @@ impl TimerApp {
                 for i in indices {
                     let (slot, _) = ui.allocate_exact_size(vec2(ui.available_width(), 58.0 + 4.0), Sense::hover());
                     let r = Rect::from_min_size(slot.min, vec2(row_w, 58.0));
-                    ui.painter().rect_filled(r, t::RADIUS_CTRL, t::SURFACE_1);
+                    ui.painter().rect_filled(r, t::RADIUS_CTRL, t::SURFACE_1());
                     let entry = &mut self.state.history[i];
 
                     // Строка 1: название, длительность, корзина.
@@ -3495,27 +3496,27 @@ impl TimerApp {
                         to_rem = Some(i);
                     }
                     // ВОЗВРАЩЕНЫ ЧАСЫ: format!("{:02}:{:02}:{:02}", h, m, s)
-                    let dur_rect = kit::text(ui, pos2(trash_r.left() - 8.0, row1_cy), Align2::RIGHT_CENTER, &fmt_hms(entry.duration_secs), t::mono(12.0), t::TEXT_SECONDARY);
+                    let dur_rect = kit::text(ui, pos2(trash_r.left() - 8.0, row1_cy), Align2::RIGHT_CENTER, &fmt_hms(entry.duration_secs), t::mono(12.0), t::TEXT_SECONDARY());
                     let name_left = r.left() + 11.0;
-                    kit::text_trunc(ui, pos2(name_left, row1_cy), Align2::LEFT_CENTER, &entry.mode, t::medium(13.0), t::TEXT_PRIMARY, dur_rect.left() - 8.0 - name_left);
+                    kit::text_trunc(ui, pos2(name_left, row1_cy), Align2::LEFT_CENTER, &entry.mode, t::medium(13.0), t::TEXT_PRIMARY(), dur_rect.left() - 8.0 - name_left);
 
                     // Строка 2: заметка — поле без рамки, подложка surface.2 только в фокусе.
                     let row2_cy = r.top() + 6.0 + 24.0 + 2.0 + 10.0;
                     let note_id = Id::new(("note", i, entry.id));
                     let focused = ui.memory(|m| m.has_focus(note_id));
-                    let note_color = if entry.comment.is_empty() { t::TEXT_DISABLED } else { t::TEXT_SECONDARY };
+                    let note_color = if entry.comment.is_empty() { t::TEXT_DISABLED() } else { t::TEXT_SECONDARY() };
                     static_icon(ui, Rect::from_center_size(pos2(name_left + 6.0, row2_cy), vec2(12.0, 20.0)), ph::NOTE_PENCIL, 12.0, false,
-                        if focused { t::TEXT_SECONDARY } else { note_color });
+                        if focused { t::TEXT_SECONDARY() } else { note_color });
                     let field = Rect::from_min_max(pos2(name_left + 18.0, row2_cy - 10.0), pos2(r.right() - 4.0, row2_cy + 10.0));
                     if focused {
-                        ui.painter().rect_filled(field.expand2(vec2(2.0, 0.0)), t::RADIUS_CHIP, t::SURFACE_2);
+                        ui.painter().rect_filled(field.expand2(vec2(2.0, 0.0)), t::RADIUS_CHIP, t::SURFACE_2());
                     }
                     let edit = egui::TextEdit::singleline(&mut entry.comment)
                         .id(note_id)
                         .frame(egui::Frame::NONE)
-                        .hint_text(egui::RichText::new("Заметка").color(t::TEXT_DISABLED))
+                        .hint_text(egui::RichText::new("Заметка").color(t::TEXT_DISABLED()))
                         .font(t::regular(12.0))
-                        .text_color(t::TEXT_SECONDARY)
+                        .text_color(t::TEXT_SECONDARY())
                         .vertical_align(egui::Align::Center)
                         .desired_width(field.width() - 8.0);
                     let resp = ui.place(field.shrink2(vec2(4.0, 0.0)), edit);
@@ -3651,12 +3652,12 @@ impl TimerApp {
         // Сбросить все по умолчанию — кнопка-призрак, без подтверждения.
         y += 4.0;
         let reset_label = "Сбросить все по умолчанию";
-        let reset_w = kit::galley(ui, reset_label, t::medium(12.0), t::TEXT_SECONDARY).size().x + 14.0 + 6.0 + 14.0;
+        let reset_w = kit::galley(ui, reset_label, t::medium(12.0), t::TEXT_SECONDARY()).size().x + 14.0 + 6.0 + 14.0;
         let reset_r = Rect::from_min_size(pos2(left - 6.0, y), vec2(reset_w, 28.0));
         if kit::button(
             ui, reset_r, Id::new("hk_reset"),
             Content::IconText { glyph: ph::ARROW_COUNTER_CLOCKWISE, size: 14.0, fill: false, label: reset_label, font: t::medium(12.0), gap: 6.0 },
-            ButtonStyle::ghost(t::TEXT_SECONDARY, t::RADIUS_CTRL), enabled,
+            ButtonStyle::ghost(t::TEXT_SECONDARY(), t::RADIUS_CTRL), enabled,
         ).clicked() {
             self.config.hotkeys = system::Bindings::default();
             self.hotkey_edit = None;
@@ -3692,8 +3693,8 @@ impl TimerApp {
         const W: f32 = 280.0;
         let current = self.config.voice_device.clone();
         let frame = egui::Frame::NONE
-            .fill(t::SURFACE_1)
-            .stroke(Stroke::new(1.0, t::LINE))
+            .fill(t::SURFACE_1())
+            .stroke(Stroke::new(1.0, t::LINE()))
             .corner_radius(t::RADIUS_CTRL)
             .inner_margin(6.0);
         let mut chosen = None;
@@ -3711,14 +3712,14 @@ impl TimerApp {
                     let selected = option == current;
                     if resp.hovered() {
                         ui.ctx().set_cursor_icon(CursorIcon::PointingHand);
-                        ui.painter().rect_filled(r, t::RADIUS_CHIP, t::SURFACE_3);
+                        ui.painter().rect_filled(r, t::RADIUS_CHIP, t::SURFACE_3());
                     } else if selected {
                         ui.painter().rect_filled(r, t::RADIUS_CHIP, t::tint(accent, 0x22));
                     }
                     let label = option.clone().unwrap_or_else(|| "По умолчанию в Windows".to_string());
-                    let color = if selected { accent } else { t::TEXT_PRIMARY };
+                    let color = if selected { accent } else { t::TEXT_PRIMARY() };
                     let glyph = if option.is_some() { ph::MICROPHONE } else { ph::GEAR };
-                    static_icon(ui, Rect::from_center_size(pos2(r.left() + 14.0, r.center().y), vec2(14.0, 14.0)), glyph, 14.0, false, if selected { accent } else { t::TEXT_SECONDARY });
+                    static_icon(ui, Rect::from_center_size(pos2(r.left() + 14.0, r.center().y), vec2(14.0, 14.0)), glyph, 14.0, false, if selected { accent } else { t::TEXT_SECONDARY() });
                     kit::text_trunc(ui, pos2(r.left() + 30.0, r.center().y), Align2::LEFT_CENTER, &label, t::regular(13.0), color, r.width() - 56.0);
                     if selected {
                         static_icon(ui, Rect::from_center_size(pos2(r.right() - 14.0, r.center().y), vec2(14.0, 14.0)), ph::CHECK, 14.0, false, accent);
@@ -3745,7 +3746,7 @@ impl TimerApp {
         y += 32.0;
 
         // Микрофон: выпадающий список устройств.
-        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Микрофон", t::regular(13.0), t::TEXT_PRIMARY);
+        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Микрофон", t::regular(13.0), t::TEXT_PRIMARY());
         let shown = match (&self.config.voice_device, &self.voice_device_active) {
             (Some(name), _) => name.clone(),
             (None, Some(active)) => format!("По умолчанию · {active}"),
@@ -3753,7 +3754,7 @@ impl TimerApp {
         };
         let shown: String = if shown.chars().count() > 30 { shown.chars().take(29).chain(['…']).collect() } else { shown };
         let font = t::regular(12.0);
-        let chip_w = kit::galley(ui, &shown, font.clone(), t::TEXT_SECONDARY).size().x + 20.0 + 14.0 + 16.0;
+        let chip_w = kit::galley(ui, &shown, font.clone(), t::TEXT_SECONDARY()).size().x + 20.0 + 14.0 + 16.0;
         let chip_r = Rect::from_min_size(pos2(left + w - chip_w, y + 3.0), vec2(chip_w, 26.0));
         let chip = kit::button(
             ui, chip_r, Id::new("voice_mic"),
@@ -3761,7 +3762,7 @@ impl TimerApp {
             ButtonStyle::secondary(t::RADIUS_CTRL), true,
         ).on_hover_text("Выбрать микрофон");
         // Стрелка списка поверх правого края чипа (подпись сдвинута на её место).
-        static_icon(ui, Rect::from_center_size(pos2(chip_r.right() - 12.0, chip_r.center().y), vec2(12.0, 12.0)), ph::CARET_DOWN, 11.0, false, t::TEXT_TERTIARY);
+        static_icon(ui, Rect::from_center_size(pos2(chip_r.right() - 12.0, chip_r.center().y), vec2(12.0, 12.0)), ph::CARET_DOWN, 11.0, false, t::TEXT_TERTIARY());
         if chip.clicked() {
             // Список устройств читается только при открытии — перечисление не бесплатное.
             self.voice_devices = crate::voice::input_devices();
@@ -3780,18 +3781,18 @@ impl TimerApp {
         y += 32.0;
 
         let (status, color) = match (&self.voice_status, self.config.voice_enabled) {
-            (Some(VoiceStatus::Error(e)), _) => (format!("Ошибка: {e}"), t::DANGER),
-            (_, false) => ("Выключено · распознавание офлайн".to_string(), t::TEXT_TERTIARY),
+            (Some(VoiceStatus::Error(e)), _) => (format!("Ошибка: {e}"), t::DANGER()),
+            (_, false) => ("Выключено · распознавание офлайн".to_string(), t::TEXT_TERTIARY()),
             (Some(VoiceStatus::Ready), true) if self.voice_listening => ("Слушаю команду…".to_string(), accent),
             (Some(VoiceStatus::Ready), true) => ("Готов — скажите «Джарвис» и команду".to_string(), accent),
-            (_, true) => ("Загрузка модели…".to_string(), t::TEXT_SECONDARY),
+            (_, true) => ("Загрузка модели…".to_string(), t::TEXT_SECONDARY()),
         };
         kit::text_trunc(ui, pos2(left, y + 11.0), Align2::LEFT_CENTER, &status, t::regular(12.0), color, w);
         y += 22.0;
 
         // Уровень микрофона: если полоска не двигается, когда говоришь, — выбран не тот микрофон.
         let meter = Rect::from_min_size(pos2(left, y + 3.0), vec2(w, 4.0));
-        ui.painter().rect_filled(meter, 2u8, t::SURFACE_2);
+        ui.painter().rect_filled(meter, 2u8, t::SURFACE_2());
         let level = self.voice.as_ref().map(|v| v.level()).unwrap_or(0.0);
         let shown_level = ui.ctx().animate_value_with_time(Id::new("voice_level"), level.sqrt().clamp(0.0, 1.0), 0.08);
         if shown_level > 0.005 {
@@ -3806,7 +3807,7 @@ impl TimerApp {
             Some(h) => format!("Услышано: «{h}»"),
             None => "Услышано: —".to_string(),
         };
-        kit::text_trunc(ui, pos2(left, y + 11.0), Align2::LEFT_CENTER, &heard, t::regular(12.0), t::TEXT_SECONDARY, w);
+        kit::text_trunc(ui, pos2(left, y + 11.0), Align2::LEFT_CENTER, &heard, t::regular(12.0), t::TEXT_SECONDARY(), w);
         y += 22.0;
 
         const EXAMPLES: [&str; 4] = [
@@ -3816,7 +3817,7 @@ impl TimerApp {
             "«создай папку учёба» · «положи отчёт в папку работа»",
         ];
         for line in EXAMPLES {
-            kit::text_trunc(ui, pos2(left, y + 9.0), Align2::LEFT_CENTER, line, t::regular(11.0), t::TEXT_TERTIARY, w);
+            kit::text_trunc(ui, pos2(left, y + 9.0), Align2::LEFT_CENTER, line, t::regular(11.0), t::TEXT_TERTIARY(), w);
             y += 18.0;
         }
         save
@@ -3835,7 +3836,7 @@ impl TimerApp {
         }
 
         let field = Rect::from_min_size(pos2(row.right() - 140.0, row.center().y - 13.0), vec2(140.0, 26.0));
-        kit::text_trunc(&rui, pos2(row.left(), row.center().y), Align2::LEFT_CENTER, action.label(), t::regular(13.0), t::TEXT_PRIMARY, field.left() - 12.0 - row.left());
+        kit::text_trunc(&rui, pos2(row.left(), row.center().y), Align2::LEFT_CENTER, action.label(), t::regular(13.0), t::TEXT_PRIMARY(), field.left() - 12.0 - row.left());
 
         let field_id = Id::new(("hk_field", i));
         let resp = rui.interact(field, field_id, if enabled { Sense::click() } else { Sense::hover() });
@@ -3860,16 +3861,16 @@ impl TimerApp {
 
         // Поле: назначено / не назначено / запись / конфликт.
         let (fill, stroke) = if conflict.is_some() {
-            (t::DANGER_TINT, t::DANGER)
+            (t::DANGER_TINT(), t::DANGER())
         } else if current.is_some() {
             (
-                kit::lerp(kit::lerp(t::SURFACE_2, t::SURFACE_3, hover), t::accent_tint(accent), rec_t),
-                kit::lerp(t::BLOCK_STROKE, accent, rec_t),
+                kit::lerp(kit::lerp(t::SURFACE_2(), t::SURFACE_3(), hover), t::accent_tint(accent), rec_t),
+                kit::lerp(t::BLOCK_STROKE(), accent, rec_t),
             )
         } else {
             (
                 kit::lerp(Color32::TRANSPARENT, t::accent_tint(accent), rec_t),
-                kit::lerp(t::LINE, accent, rec_t),
+                kit::lerp(t::LINE(), accent, rec_t),
             )
         };
         rui.painter().rect(field, 6u8, fill, Stroke::new(1.0, stroke), StrokeKind::Inside);
@@ -3883,17 +3884,17 @@ impl TimerApp {
             rui.ctx().request_repaint_after(Duration::from_millis(33));
             text_x += 10.0;
             match system::partial_display(rui.input(|i| i.modifiers)) {
-                Some(partial) => (partial, t::TEXT_PRIMARY, t::medium(12.0)),
-                None => ("Нажмите сочетание…".to_string(), t::TEXT_PRIMARY, t::regular(12.0)),
+                Some(partial) => (partial, t::TEXT_PRIMARY(), t::medium(12.0)),
+                None => ("Нажмите сочетание…".to_string(), t::TEXT_PRIMARY(), t::regular(12.0)),
             }
         } else if let Some(combo) = &conflict {
-            static_icon(&rui, Rect::from_center_size(pos2(text_x + 6.0, field.center().y), vec2(12.0, 12.0)), ph::WARNING, 12.0, true, t::DANGER);
+            static_icon(&rui, Rect::from_center_size(pos2(text_x + 6.0, field.center().y), vec2(12.0, 12.0)), ph::WARNING, 12.0, true, t::DANGER());
             text_x += 16.0;
-            (combo.display(), t::DANGER, t::medium(12.0))
+            (combo.display(), t::DANGER(), t::medium(12.0))
         } else if let Some(combo) = &current {
-            (combo.display(), t::TEXT_PRIMARY, t::medium(12.0))
+            (combo.display(), t::TEXT_PRIMARY(), t::medium(12.0))
         } else {
-            ("Не назначено".to_string(), t::TEXT_TERTIARY, t::regular(12.0))
+            ("Не назначено".to_string(), t::TEXT_TERTIARY(), t::regular(12.0))
         };
 
         // При наведении на назначенное поле — кнопка «очистить» 20×20 справа.
@@ -3904,11 +3905,11 @@ impl TimerApp {
         if show_clear {
             let clear_r = Rect::from_center_size(pos2(field.right() - 3.0 - 10.0, field.center().y), vec2(20.0, 20.0));
             let style = ButtonStyle {
-                fill: t::TOGGLE_OFF,
-                hover_fill: kit::lerp(t::TOGGLE_OFF, t::SURFACE_3, 0.5),
-                press_fill: t::SURFACE_3,
-                color: t::TEXT_PRIMARY,
-                hover_color: t::TEXT_PRIMARY,
+                fill: t::TOGGLE_OFF(),
+                hover_fill: kit::lerp(t::TOGGLE_OFF(), t::SURFACE_3(), 0.5),
+                press_fill: t::SURFACE_3(),
+                color: t::TEXT_PRIMARY(),
+                hover_color: t::TEXT_PRIMARY(),
                 stroke: None,
                 radius: 4,
             };
@@ -3961,18 +3962,18 @@ impl TimerApp {
             mui.multiply_opacity((msg_h / 24.0).clamp(0.0, 1.0));
             match self.hotkey_edit.as_ref().filter(|e| e.action() == action) {
                 Some(HotkeyEdit::Recording { .. }) => {
-                    kit::text(&mui, pos2(msg.left(), msg.center().y), Align2::LEFT_CENTER, "Esc — отмена", t::regular(12.0), t::TEXT_TERTIARY);
+                    kit::text(&mui, pos2(msg.left(), msg.center().y), Align2::LEFT_CENTER, "Esc — отмена", t::regular(12.0), t::TEXT_TERTIARY());
                 }
                 Some(HotkeyEdit::SystemConflict { .. }) => {
-                    kit::text_trunc(&mui, pos2(msg.left(), msg.center().y), Align2::LEFT_CENTER, "Занято Windows или другой программой", t::regular(12.0), t::DANGER, msg.width());
+                    kit::text_trunc(&mui, pos2(msg.left(), msg.center().y), Align2::LEFT_CENTER, "Занято Windows или другой программой", t::regular(12.0), t::DANGER(), msg.width());
                 }
                 Some(HotkeyEdit::TakenBy { .. }) => {
                     if let Some((combo, other)) = taken_by.clone() {
-                        let cancel_w = kit::galley(&mui, "Отмена", t::medium(12.0), t::TEXT_PRIMARY).size().x + 16.0;
+                        let cancel_w = kit::galley(&mui, "Отмена", t::medium(12.0), t::TEXT_PRIMARY()).size().x + 16.0;
                         let replace_w = kit::galley(&mui, "Заменить", t::medium(12.0), accent).size().x + 16.0;
                         let cancel_r = Rect::from_min_size(pos2(msg.right() - cancel_w, msg.center().y - 11.0), vec2(cancel_w, 22.0));
                         let replace_r = Rect::from_min_size(pos2(cancel_r.left() - 8.0 - replace_w, cancel_r.top()), vec2(replace_w, 22.0));
-                        kit::text_trunc(&mui, pos2(msg.left(), msg.center().y), Align2::LEFT_CENTER, &format!("Уже у «{}»", other.label()), t::regular(12.0), t::DANGER, replace_r.left() - 8.0 - msg.left());
+                        kit::text_trunc(&mui, pos2(msg.left(), msg.center().y), Align2::LEFT_CENTER, &format!("Уже у «{}»", other.label()), t::regular(12.0), t::DANGER(), replace_r.left() - 8.0 - msg.left());
                         if kit::button(&mui, replace_r, field_id.with("replace"), Content::Text { label: "Заменить", font: t::medium(12.0) }, ButtonStyle::accent_outline(accent, t::RADIUS_CHIP), true).clicked() {
                             // «Заменить» снимает сочетание с другого действия.
                             self.config.hotkeys.set(other, None);
@@ -3996,14 +3997,14 @@ impl TimerApp {
         let data_dir = self.config.data_path.clone().unwrap_or_else(storage::get_default_path);
         let reset_r = Rect::from_min_size(pos2(left + w - 28.0, y + 2.0), vec2(28.0, 28.0));
         let change_label = "Изменить";
-        let change_w = kit::galley(ui, change_label, t::medium(12.0), t::TEXT_PRIMARY).size().x + 20.0;
+        let change_w = kit::galley(ui, change_label, t::medium(12.0), t::TEXT_PRIMARY()).size().x + 20.0;
         let change_r = Rect::from_min_size(pos2(reset_r.left() - 6.0 - change_w, y), vec2(change_w, 32.0));
         let path_r = Rect::from_min_max(pos2(left, y), pos2(change_r.left() - 6.0, y + 32.0));
-        ui.painter().rect(path_r, t::RADIUS_CTRL, t::SURFACE_2, t::block_stroke(), StrokeKind::Inside);
-        static_icon(ui, Rect::from_center_size(pos2(path_r.left() + 17.0, path_r.center().y), vec2(14.0, 14.0)), ph::FOLDER, 14.0, false, t::TEXT_SECONDARY);
+        ui.painter().rect(path_r, t::RADIUS_CTRL, t::SURFACE_2(), t::block_stroke(), StrokeKind::Inside);
+        static_icon(ui, Rect::from_center_size(pos2(path_r.left() + 17.0, path_r.center().y), vec2(14.0, 14.0)), ph::FOLDER, 14.0, false, t::TEXT_SECONDARY());
         let path_text = storage::state_file_path(self.config.data_path.as_ref()).display().to_string();
         let path_resp = ui.interact(path_r, Id::new("data_path"), Sense::hover());
-        kit::text_trunc(ui, pos2(path_r.left() + 30.0, path_r.center().y), Align2::LEFT_CENTER, &data_dir.display().to_string(), t::regular(12.0), t::TEXT_SECONDARY, path_r.width() - 40.0);
+        kit::text_trunc(ui, pos2(path_r.left() + 30.0, path_r.center().y), Align2::LEFT_CENTER, &data_dir.display().to_string(), t::regular(12.0), t::TEXT_SECONDARY(), path_r.width() - 40.0);
         path_resp.on_hover_text(path_text);
         if kit::button(ui, change_r, Id::new("data_change"), Content::Text { label: change_label, font: t::medium(12.0) }, ButtonStyle::secondary_bright(t::RADIUS_CTRL), true).clicked() {
             if let Some(dir) = rfd::FileDialog::new().pick_folder() {
@@ -4030,7 +4031,7 @@ impl TimerApp {
         let mut save = false;
 
         // АКЦЕНТ: 8 готовых цветов + свой цвет.
-        kit::overline(ui, pos2(left, y + 7.0), "Акцент");
+        kit::overline(ui, pos2(left, y + 7.0), "Оформление");
         y += 14.0 + 8.0;
         let current = self.config.primary_color;
         let custom_active = !t::SWATCHES.contains(&current);
@@ -4063,8 +4064,8 @@ impl TimerApp {
             ui.painter().circle_filled(custom_center, 12.0, accent);
             ui.painter().circle_stroke(custom_center, 15.0, Stroke::new(2.0, accent));
         } else {
-            ui.painter().circle_filled(custom_center, 12.0, t::SURFACE_2);
-            static_icon(ui, custom_r, ph::PALETTE, 14.0, false, t::TEXT_SECONDARY);
+            ui.painter().circle_filled(custom_center, 12.0, t::SURFACE_2());
+            static_icon(ui, custom_r, ph::PALETTE, 14.0, false, t::TEXT_SECONDARY());
         }
         if custom_resp.clicked() {
             self.accent_picker_open = !self.accent_picker_open;
@@ -4076,12 +4077,20 @@ impl TimerApp {
             save = true;
         }
         let swatch_bottom = y + 24.0;
-        y += 24.0 + 12.0;
+        y += 24.0 + 8.0;
+
+        let theme_r = Rect::from_min_size(pos2(left, y), vec2(w, 32.0));
+        if kit::toggle_row(ui, theme_r, Id::new("toggle_light"), "Светлая тема", 0.0, &mut self.config.light_theme, accent, true) {
+            t::set_light(self.config.light_theme);
+            t::apply_style(&ctx, accent);
+            save = true;
+        }
+        y += 32.0 + 12.0;
 
         // БУДИЛЬНИК: громкость и звук.
         kit::overline(ui, pos2(left, y + 7.0), "Будильник");
         y += 14.0 + 4.0;
-        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Громкость", t::regular(13.0), t::TEXT_PRIMARY);
+        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Громкость", t::regular(13.0), t::TEXT_PRIMARY());
         let slider_r = Rect::from_min_max(pos2(left + 72.0 + 12.0, y + 8.0), pos2(left + w - 36.0 - 12.0, y + 24.0));
         let out = kit::slider(ui, slider_r, Id::new("volume"), &mut self.config.alarm_volume, accent);
         // Пишем на диск по отпусканию ползунка, а не на каждый пиксель перетаскивания.
@@ -4089,14 +4098,14 @@ impl TimerApp {
             save = true;
         }
         let _ = out.changed;
-        kit::text(ui, pos2(left + w, y + 16.0), Align2::RIGHT_CENTER, &format!("{:.0}%", self.config.alarm_volume * 100.0), t::mono(12.0), t::TEXT_SECONDARY);
+        kit::text(ui, pos2(left + w, y + 16.0), Align2::RIGHT_CENTER, &format!("{:.0}%", self.config.alarm_volume * 100.0), t::mono(12.0), t::TEXT_SECONDARY());
         y += 32.0 + 4.0;
 
-        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Звук", t::regular(13.0), t::TEXT_PRIMARY);
+        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Звук", t::regular(13.0), t::TEXT_PRIMARY());
         let test_r = Rect::from_min_size(pos2(left + w - 28.0, y + 2.0), vec2(28.0, 28.0));
         let reset_r = test_r.translate(vec2(-34.0, 0.0));
         let choose_label = "Выбрать…";
-        let choose_w = kit::galley(ui, choose_label, t::medium(12.0), t::TEXT_PRIMARY).size().x + 20.0;
+        let choose_w = kit::galley(ui, choose_label, t::medium(12.0), t::TEXT_PRIMARY()).size().x + 20.0;
         let choose_r = Rect::from_min_size(pos2(reset_r.left() - 6.0 - choose_w, y + 2.0), vec2(choose_w, 28.0));
         let sound_name = match &self.config.alarm_sound {
             Some(p) if Path::new(p).exists() => Path::new(p)
@@ -4106,7 +4115,7 @@ impl TimerApp {
             None => "Встроенный".to_string(),
         };
         let name_left = left + 72.0 + 6.0;
-        kit::text_trunc(ui, pos2(name_left, y + 16.0), Align2::LEFT_CENTER, &sound_name, t::regular(12.0), t::TEXT_SECONDARY, choose_r.left() - 6.0 - name_left);
+        kit::text_trunc(ui, pos2(name_left, y + 16.0), Align2::LEFT_CENTER, &sound_name, t::regular(12.0), t::TEXT_SECONDARY(), choose_r.left() - 6.0 - name_left);
         if kit::button(ui, choose_r, Id::new("sound_pick"), Content::Text { label: choose_label, font: t::medium(12.0) }, ButtonStyle::secondary_bright(t::RADIUS_CTRL), true).clicked() {
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter("Аудио", &["mp3", "wav", "ogg", "flac"])
@@ -4149,8 +4158,8 @@ impl TimerApp {
         y += 32.0;
 
         // Зазор между блоками: 4–16 px, меняется сразу, на диск — по отпусканию.
-        kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Зазор между блоками", t::regular(13.0), t::TEXT_PRIMARY);
-        let gap_r = Rect::from_min_max(pos2(left + 128.0 + 12.0, y + 8.0), pos2(left + w - 36.0 - 12.0, y + 24.0));
+        let label_r = kit::text(ui, pos2(left, y + 16.0), Align2::LEFT_CENTER, "Зазор между блоками", t::regular(13.0), t::TEXT_PRIMARY());
+        let gap_r = Rect::from_min_max(pos2(label_r.right() + 12.0, y + 8.0), pos2(left + w - 36.0 - 12.0, y + 24.0));
         let span = t::BLOCK_GAP_MAX - t::BLOCK_GAP_MIN;
         let mut k = ((self.config.block_gap - t::BLOCK_GAP_MIN) / span).clamp(0.0, 1.0);
         let gap_out = kit::slider(ui, gap_r, Id::new("block_gap"), &mut k, accent);
@@ -4160,7 +4169,7 @@ impl TimerApp {
         if gap_out.released {
             save = true;
         }
-        kit::text(ui, pos2(left + w, y + 16.0), Align2::RIGHT_CENTER, &format!("{} px", self.config.block_gap.round() as i32), t::mono(12.0), t::TEXT_SECONDARY);
+        kit::text(ui, pos2(left + w, y + 16.0), Align2::RIGHT_CENTER, &format!("{} px", self.config.block_gap.round() as i32), t::mono(12.0), t::TEXT_SECONDARY());
         y += 32.0;
 
         let music_on = self.config.music_enabled;

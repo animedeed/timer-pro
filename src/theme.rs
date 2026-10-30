@@ -2,32 +2,69 @@
 //! Все размеры — логические пиксели при масштабе 1x.
 
 use eframe::egui::{self, Color32, FontFamily, FontId, Stroke};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 // ---------------------------------------------------------------- цвета
 
-pub const BLOCK_BG: Color32 = Color32::from_rgb(0x1C, 0x1E, 0x2B);
-pub const BLOCK_STROKE: Color32 = Color32::from_rgba_unmultiplied_const(0xFF, 0xFF, 0xFF, 0x0F);
-pub const SURFACE_1: Color32 = Color32::from_rgb(0x22, 0x24, 0x2F);
-pub const SURFACE_2: Color32 = Color32::from_rgb(0x26, 0x29, 0x38);
-pub const SURFACE_3: Color32 = Color32::from_rgb(0x2F, 0x33, 0x44);
-pub const SURFACE_SUNKEN: Color32 = Color32::from_rgb(0x16, 0x18, 0x24);
-pub const LINE: Color32 = Color32::from_rgba_unmultiplied_const(0xFF, 0xFF, 0xFF, 0x14);
-pub const TEXT_PRIMARY: Color32 = Color32::from_rgb(0xE9, 0xE9, 0xED);
-pub const TEXT_SECONDARY: Color32 = Color32::from_rgb(0x93, 0x97, 0xAB);
-pub const TEXT_TERTIARY: Color32 = Color32::from_rgb(0x6A, 0x6E, 0x80);
-pub const TEXT_DISABLED: Color32 = Color32::from_rgb(0x46, 0x4A, 0x5A);
-pub const KNOB: Color32 = Color32::from_rgb(0xF5, 0xF6, 0xFA);
-pub const TOGGLE_OFF: Color32 = Color32::from_rgb(0x3A, 0x3D, 0x4D);
-pub const DANGER: Color32 = Color32::from_rgb(0xFF, 0x6B, 0x6B);
-pub const DANGER_TINT: Color32 = Color32::from_rgba_unmultiplied_const(0xFF, 0x6B, 0x6B, 0x29);
-pub const SHADOW: Color32 = Color32::from_rgba_unmultiplied_const(0x00, 0x00, 0x00, 0x73);
-pub const SCROLL_HANDLE: Color32 = Color32::from_rgba_unmultiplied_const(0xFF, 0xFF, 0xFF, 0x29);
+/// Светлая тема включена (Опции → Оформление). Цвета ниже — функции: значение
+/// берётся из текущей палитры, поэтому тема переключается без перезапуска.
+static LIGHT: AtomicBool = AtomicBool::new(false);
+
+pub fn set_light(on: bool) {
+    LIGHT.store(on, Ordering::Relaxed);
+}
+
+pub fn is_light() -> bool {
+    LIGHT.load(Ordering::Relaxed)
+}
+
+const fn rgb(r: u8, g: u8, b: u8) -> Color32 {
+    Color32::from_rgb(r, g, b)
+}
+
+const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color32 {
+    Color32::from_rgba_unmultiplied_const(r, g, b, a)
+}
+
+/// Цвет: тёмная тема, светлая тема.
+macro_rules! palette {
+    ($($name:ident = $dark:expr, $light:expr;)*) => {
+        $(
+            #[allow(non_snake_case)]
+            #[inline]
+            pub fn $name() -> Color32 {
+                if is_light() { $light } else { $dark }
+            }
+        )*
+    };
+}
+
+palette! {
+    BLOCK_BG = rgb(0x1C, 0x1E, 0x2B), rgb(0xFB, 0xFB, 0xFD);
+    BLOCK_STROKE = rgba(0xFF, 0xFF, 0xFF, 0x0F), rgba(0x00, 0x00, 0x00, 0x17);
+    SURFACE_1 = rgb(0x22, 0x24, 0x2F), rgb(0xF2, 0xF3, 0xF7);
+    SURFACE_2 = rgb(0x26, 0x29, 0x38), rgb(0xEA, 0xEC, 0xF2);
+    SURFACE_3 = rgb(0x2F, 0x33, 0x44), rgb(0xDF, 0xE2, 0xEA);
+    SURFACE_SUNKEN = rgb(0x16, 0x18, 0x24), rgb(0xE6, 0xE8, 0xEE);
+    LINE = rgba(0xFF, 0xFF, 0xFF, 0x14), rgba(0x00, 0x00, 0x00, 0x14);
+    TEXT_PRIMARY = rgb(0xE9, 0xE9, 0xED), rgb(0x1B, 0x1D, 0x27);
+    TEXT_SECONDARY = rgb(0x93, 0x97, 0xAB), rgb(0x5A, 0x5F, 0x72);
+    TEXT_TERTIARY = rgb(0x6A, 0x6E, 0x80), rgb(0x86, 0x8B, 0x9C);
+    TEXT_DISABLED = rgb(0x46, 0x4A, 0x5A), rgb(0xB3, 0xB7, 0xC3);
+    KNOB = rgb(0xF5, 0xF6, 0xFA), rgb(0xFF, 0xFF, 0xFF);
+    TOGGLE_OFF = rgb(0x3A, 0x3D, 0x4D), rgb(0xC5, 0xC9, 0xD3);
+    DANGER = rgb(0xFF, 0x6B, 0x6B), rgb(0xE5, 0x48, 0x4D);
+    DANGER_TINT = rgba(0xFF, 0x6B, 0x6B, 0x29), rgba(0xE5, 0x48, 0x4D, 0x24);
+    SHADOW = rgba(0x00, 0x00, 0x00, 0x73), rgba(0x00, 0x00, 0x00, 0x30);
+    SCROLL_HANDLE = rgba(0xFF, 0xFF, 0xFF, 0x29), rgba(0x00, 0x00, 0x00, 0x33);
+}
 const ON_ACCENT_DARK: Color32 = Color32::from_rgb(0x14, 0x15, 0x1F);
 
 /// Обводка виджета при звонке: альфа пульсирует 0x66 ↔ 0xCC.
 pub fn danger_stroke(alpha: u8) -> Color32 {
-    Color32::from_rgba_unmultiplied(0xFF, 0x6B, 0x6B, alpha)
+    let d = DANGER();
+    Color32::from_rgba_unmultiplied(d.r(), d.g(), d.b(), alpha)
 }
 
 /// Оттенок акцента: тот же цвет с альфой поверх фона блока.
@@ -58,7 +95,7 @@ pub fn on_accent(accent: Color32) -> Color32 {
     let l = relative_luminance(accent);
     let vs_light = 1.05 / (l + 0.05);
     let vs_dark = (l + 0.05) / (relative_luminance(ON_ACCENT_DARK) + 0.05);
-    if vs_light > vs_dark { KNOB } else { ON_ACCENT_DARK }
+    if vs_light > vs_dark { KNOB() } else { ON_ACCENT_DARK }
 }
 
 /// Готовые цвета акцента из «Опций».
@@ -108,11 +145,11 @@ pub const RADIUS_CHIP: u8 = 6;
 pub const BLOCK_PAD: f32 = 12.0;
 
 pub fn block_shadow() -> egui::Shadow {
-    egui::Shadow { offset: [0, 6], blur: 18, spread: 0, color: SHADOW }
+    egui::Shadow { offset: [0, 6], blur: 18, spread: 0, color: SHADOW() }
 }
 
 pub fn block_stroke() -> Stroke {
-    Stroke::new(1.0, BLOCK_STROKE)
+    Stroke::new(1.0, BLOCK_STROKE())
 }
 
 // ---------------------------------------------------------------- анимации
@@ -261,33 +298,34 @@ pub fn install_fonts(ctx: &egui::Context) {
 
 pub fn apply_style(ctx: &egui::Context, accent: Color32) {
     ctx.all_styles_mut(|style| {
-        style.visuals = egui::Visuals::dark();
+        style.visuals = if is_light() { egui::Visuals::light() } else { egui::Visuals::dark() };
         let v = &mut style.visuals;
         v.panel_fill = Color32::TRANSPARENT;
-        v.window_fill = BLOCK_BG;
+        v.window_fill = BLOCK_BG();
         v.window_stroke = block_stroke();
         v.window_shadow = block_shadow();
         v.popup_shadow = block_shadow();
         v.window_corner_radius = RADIUS_CTRL.into();
         v.menu_corner_radius = RADIUS_CTRL.into();
-        v.extreme_bg_color = SURFACE_2;
+        v.extreme_bg_color = SURFACE_2();
         v.override_text_color = None;
         v.hyperlink_color = accent;
         v.selection.bg_fill = accent_tint_pressed(accent);
         v.selection.stroke = Stroke::new(1.0, accent);
-        v.text_cursor.stroke = Stroke::new(1.5, TEXT_PRIMARY);
+        v.text_cursor.stroke = Stroke::new(1.5, TEXT_PRIMARY());
 
         // Полоса прокрутки берёт цвет из bg_fill виджетов.
-        v.widgets.inactive.bg_fill = SCROLL_HANDLE;
-        v.widgets.inactive.weak_bg_fill = SURFACE_2;
-        v.widgets.hovered.bg_fill = tint(Color32::WHITE, 0x40);
-        v.widgets.hovered.weak_bg_fill = SURFACE_3;
-        v.widgets.active.bg_fill = tint(Color32::WHITE, 0x52);
-        v.widgets.active.weak_bg_fill = SURFACE_3;
-        v.widgets.noninteractive.fg_stroke = Stroke::new(1.0, TEXT_SECONDARY);
-        v.widgets.inactive.fg_stroke = Stroke::new(1.0, TEXT_PRIMARY);
-        v.widgets.hovered.fg_stroke = Stroke::new(1.0, TEXT_PRIMARY);
-        v.widgets.active.fg_stroke = Stroke::new(1.0, TEXT_PRIMARY);
+        v.widgets.inactive.bg_fill = SCROLL_HANDLE();
+        v.widgets.inactive.weak_bg_fill = SURFACE_2();
+        let ink = if is_light() { Color32::BLACK } else { Color32::WHITE };
+        v.widgets.hovered.bg_fill = tint(ink, 0x40);
+        v.widgets.hovered.weak_bg_fill = SURFACE_3();
+        v.widgets.active.bg_fill = tint(ink, 0x52);
+        v.widgets.active.weak_bg_fill = SURFACE_3();
+        v.widgets.noninteractive.fg_stroke = Stroke::new(1.0, TEXT_SECONDARY());
+        v.widgets.inactive.fg_stroke = Stroke::new(1.0, TEXT_PRIMARY());
+        v.widgets.hovered.fg_stroke = Stroke::new(1.0, TEXT_PRIMARY());
+        v.widgets.active.fg_stroke = Stroke::new(1.0, TEXT_PRIMARY());
 
         style.spacing.item_spacing = egui::vec2(8.0, 4.0);
         style.spacing.scroll = egui::style::ScrollStyle {
@@ -339,7 +377,7 @@ mod tests {
     fn on_accent_picks_readable_text() {
         // Тёмный фиолетовый → светлый текст, жёлтый → тёмный. Формула та же,
         // что в макете, поэтому и для акцента по умолчанию #6478FF выходит тёмный.
-        assert_eq!(on_accent(Color32::from_rgb(0x8A, 0x2B, 0xE2)), KNOB);
+        assert_eq!(on_accent(Color32::from_rgb(0x8A, 0x2B, 0xE2)), KNOB());
         assert_eq!(on_accent(Color32::from_rgb(0xE0, 0xA8, 0x4F)), ON_ACCENT_DARK);
         assert_eq!(on_accent(Color32::from_rgb(0x64, 0x78, 0xFF)), ON_ACCENT_DARK);
     }

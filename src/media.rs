@@ -153,6 +153,8 @@ mod backend {
         };
 
         let mut cache = CoverCache { key: 0, cover: None, reads: 0, polls_since_change: 0 };
+        // Источник, показанный в прошлый раз: на паузе плашка остаётся на нём.
+        let mut shown_id = String::new();
         let mut last: Option<(String, String, String, bool, bool, bool, bool, bool, Option<i32>, u64)> = None;
         let mut next_poll = Instant::now();
 
@@ -160,7 +162,7 @@ mod backend {
             let wait = next_poll.saturating_duration_since(Instant::now());
             match rx.recv_timeout(wait) {
                 Ok(cmd) => {
-                    if let Ok(session) = manager.GetCurrentSession() {
+                    if let Some(session) = pick(&manager, &shown_id) {
                         execute(&session, cmd);
                     }
                     next_poll = Instant::now() + AFTER_COMMAND;
@@ -170,7 +172,8 @@ mod backend {
                 Err(RecvTimeoutError::Disconnected) => return,
             }
 
-            let snap = manager.GetCurrentSession().ok().and_then(|s| read(&s, &mut cache).ok());
+            let snap = pick(&manager, &shown_id).and_then(|s| read(&s, &mut cache).ok());
+            shown_id = snap.as_ref().map(|s| s.source_id.clone()).unwrap_or_default();
 
             // Будим UI только когда что-то видимое поменялось.
             let fingerprint = snap.as_ref().map(|s| {
@@ -196,6 +199,34 @@ mod backend {
             }
             next_poll = Instant::now() + POLL;
         }
+    }
+
+    /// Какой источник показывать. Windows считает «текущим» тот плеер, с которым
+    /// взаимодействовали последним, — и если рядом открыта другая программа-плеер,
+    /// играющий браузер оставался невидим. Порядок: играющий «текущий» → любой
+    /// играющий → показанный в прошлый раз (на паузе) → «текущий» → первый.
+    fn pick(manager: &Manager, shown_id: &str) -> Option<Session> {
+        let playing = |s: &Session| {
+            s.GetPlaybackInfo()
+                .and_then(|i| i.PlaybackStatus())
+                .map(|st| st == Status::Playing)
+                .unwrap_or(false)
+        };
+        let id = |s: &Session| s.SourceAppUserModelId().map(|h| h.to_string_lossy()).unwrap_or_default();
+        let current = manager.GetCurrentSession().ok();
+        if let Some(c) = current.as_ref().filter(|c| playing(c)) {
+            return Some(c.clone());
+        }
+        let all: Vec<Session> = manager
+            .GetSessions()
+            .map(|list| (0..list.Size().unwrap_or(0)).filter_map(|i| list.GetAt(i).ok()).collect())
+            .unwrap_or_default();
+        all.iter()
+            .find(|s| playing(s))
+            .or_else(|| all.iter().find(|s| !shown_id.is_empty() && id(s) == shown_id))
+            .cloned()
+            .or(current)
+            .or_else(|| all.into_iter().next())
     }
 
     fn execute(session: &Session, cmd: Command) {

@@ -79,12 +79,12 @@ pub fn overline(ui: &Ui, left_center: Pos2, s: &str) {
         TextFormat {
             font_id: t::medium(11.0),
             extra_letter_spacing: 0.6,
-            color: t::TEXT_TERTIARY,
+            color: t::TEXT_TERTIARY(),
             ..Default::default()
         },
     );
     let g = ui.painter().layout_job(job);
-    paint_galley(ui.painter(), left_center, Align2::LEFT_CENTER, g, t::TEXT_TERTIARY);
+    paint_galley(ui.painter(), left_center, Align2::LEFT_CENTER, g, t::TEXT_TERTIARY());
 }
 
 // ---------------------------------------------------------------- блоки
@@ -92,7 +92,7 @@ pub fn overline(ui: &Ui, left_center: Pos2, s: &str) {
 /// Парящий блок: заливка block.bg, обводка 1 px внутрь, радиус 14.
 /// Без тени: вокруг блоков должен быть виден рабочий стол, а не тёмный ореол.
 pub fn paint_block(painter: &Painter, rect: Rect, stroke: Color32) {
-    painter.rect(rect, t::RADIUS_BLOCK, t::BLOCK_BG, Stroke::new(1.0, stroke), StrokeKind::Inside);
+    painter.rect(rect, t::RADIUS_BLOCK, t::BLOCK_BG(), Stroke::new(1.0, stroke), StrokeKind::Inside);
 }
 
 // ---------------------------------------------------------------- кнопки
@@ -112,11 +112,11 @@ impl ButtonStyle {
     /// Вторичная кнопка: surface.2, при наведении surface.3.
     pub fn secondary(radius: u8) -> Self {
         Self {
-            fill: t::SURFACE_2,
-            hover_fill: t::SURFACE_3,
-            press_fill: lerp(t::SURFACE_3, Color32::BLACK, 0.15),
-            color: t::TEXT_SECONDARY,
-            hover_color: t::TEXT_PRIMARY,
+            fill: t::SURFACE_2(),
+            hover_fill: t::SURFACE_3(),
+            press_fill: lerp(t::SURFACE_3(), Color32::BLACK, 0.15),
+            color: t::TEXT_SECONDARY(),
+            hover_color: t::TEXT_PRIMARY(),
             stroke: None,
             radius,
         }
@@ -124,17 +124,17 @@ impl ButtonStyle {
 
     /// Вторичная кнопка с основным цветом текста.
     pub fn secondary_bright(radius: u8) -> Self {
-        Self { color: t::TEXT_PRIMARY, ..Self::secondary(radius) }
+        Self { color: t::TEXT_PRIMARY(), ..Self::secondary(radius) }
     }
 
     /// Кнопка-иконка без фона: transparent → surface.2.
     pub fn ghost(color: Color32, radius: u8) -> Self {
         Self {
             fill: Color32::TRANSPARENT,
-            hover_fill: t::SURFACE_2,
-            press_fill: t::SURFACE_3,
+            hover_fill: t::SURFACE_2(),
+            press_fill: t::SURFACE_3(),
             color,
-            hover_color: t::TEXT_PRIMARY,
+            hover_color: t::TEXT_PRIMARY(),
             stroke: None,
             radius,
         }
@@ -144,10 +144,10 @@ impl ButtonStyle {
     pub fn danger_ghost(radius: u8) -> Self {
         Self {
             fill: Color32::TRANSPARENT,
-            hover_fill: t::DANGER_TINT,
-            press_fill: t::tint(t::DANGER, 0x3D),
-            color: t::TEXT_TERTIARY,
-            hover_color: t::DANGER,
+            hover_fill: t::DANGER_TINT(),
+            press_fill: t::tint(t::DANGER(), 0x3D),
+            color: t::TEXT_TERTIARY(),
+            hover_color: t::DANGER(),
             stroke: None,
             radius,
         }
@@ -183,11 +183,11 @@ impl ButtonStyle {
     pub fn chip() -> Self {
         Self {
             fill: Color32::TRANSPARENT,
-            hover_fill: t::SURFACE_2,
-            press_fill: t::SURFACE_3,
-            color: t::TEXT_SECONDARY,
-            hover_color: t::TEXT_PRIMARY,
-            stroke: Some(t::LINE),
+            hover_fill: t::SURFACE_2(),
+            press_fill: t::SURFACE_3(),
+            color: t::TEXT_SECONDARY(),
+            hover_color: t::TEXT_PRIMARY(),
+            stroke: Some(t::LINE()),
             radius: t::RADIUS_CHIP,
         }
     }
@@ -195,11 +195,11 @@ impl ButtonStyle {
     /// «Тихо»: красный оттенок, красный текст.
     pub fn danger_solid() -> Self {
         Self {
-            fill: t::DANGER_TINT,
-            hover_fill: t::tint(t::DANGER, 0x3D),
-            press_fill: t::tint(t::DANGER, 0x52),
-            color: t::DANGER,
-            hover_color: t::DANGER,
+            fill: t::DANGER_TINT(),
+            hover_fill: t::tint(t::DANGER(), 0x3D),
+            press_fill: t::tint(t::DANGER(), 0x52),
+            color: t::DANGER(),
+            hover_color: t::DANGER(),
             stroke: None,
             radius: t::RADIUS_BTN_LG,
         }
@@ -256,8 +256,8 @@ pub fn button(ui: &Ui, rect: Rect, id: Id, content: Content, style: ButtonStyle,
 
 /// Переключатель 32×18: бегунок 14 px едет 2 → 16, трек toggle.off → accent.
 pub fn paint_switch(painter: &Painter, rect: Rect, t_on: f32, accent: Color32) {
-    let track = lerp(t::TOGGLE_OFF, accent, t_on);
-    let knob = lerp(t::TEXT_SECONDARY, t::KNOB, t_on);
+    let track = lerp(t::TOGGLE_OFF(), accent, t_on);
+    let knob = lerp(t::TEXT_SECONDARY(), t::KNOB(), t_on);
     painter.rect_filled(rect, 9u8, track);
     let cx = rect.left() + 2.0 + 7.0 + 14.0 * t_on;
     painter.circle_filled(Pos2::new(cx, rect.center().y), 7.0, knob);
@@ -288,7 +288,7 @@ pub fn toggle_row(
     if !enabled {
         painter.multiply_opacity(0.45);
     }
-    let color = if indent > 0.0 { t::TEXT_SECONDARY } else { t::TEXT_PRIMARY };
+    let color = if indent > 0.0 { t::TEXT_SECONDARY() } else { t::TEXT_PRIMARY() };
     let g = galley_trunc(ui, label, t::regular(13.0), color, rect.width() - indent - 44.0);
     paint_galley(&painter, Pos2::new(rect.left() + indent, rect.center().y), Align2::LEFT_CENTER, g, color);
     let sw = Rect::from_min_size(
@@ -327,11 +327,11 @@ pub fn slider(ui: &Ui, rect: Rect, id: Id, value: &mut f32, accent: Color32) -> 
     let painter = ui.painter();
     let cy = rect.center().y;
     let track = Rect::from_min_max(Pos2::new(rect.left(), cy - 2.0), Pos2::new(rect.right(), cy + 2.0));
-    painter.rect_filled(track, 2u8, t::TOGGLE_OFF);
+    painter.rect_filled(track, 2u8, t::TOGGLE_OFF());
     let kx = left + (right - left) * value.clamp(0.0, 1.0);
     let filled = Rect::from_min_max(track.min, Pos2::new(kx, track.max.y));
     painter.rect_filled(filled, 2u8, accent);
-    painter.circle_filled(Pos2::new(kx, cy), 7.0, t::KNOB);
+    painter.circle_filled(Pos2::new(kx, cy), 7.0, t::KNOB());
     SliderOutput { changed, released: resp.drag_stopped() || resp.clicked() }
 }
 
@@ -440,13 +440,13 @@ pub fn hms_field(ui: &Ui, rect: Rect, id: Id, value: &mut u64, max: u64, unit: &
     }
 
     let it = interaction(ui, &resp, true);
-    let stroke = if focused { accent } else { lerp(t::BLOCK_STROKE, t::LINE, it.hover) };
+    let stroke = if focused { accent } else { lerp(t::BLOCK_STROKE(), t::LINE(), it.hover) };
     let painter = ui.painter();
-    painter.rect(rect, t::RADIUS_CTRL, t::SURFACE_2, Stroke::new(1.0, stroke), StrokeKind::Inside);
-    let value_color = if focused { t::TEXT_PRIMARY } else { t::TEXT_SECONDARY };
+    painter.rect(rect, t::RADIUS_CTRL, t::SURFACE_2(), Stroke::new(1.0, stroke), StrokeKind::Inside);
+    let value_color = if focused { t::TEXT_PRIMARY() } else { t::TEXT_SECONDARY() };
     let top = rect.center().y - 19.0;
     text(ui, Pos2::new(rect.center().x, top + 13.0), Align2::CENTER_CENTER, &format!("{:02}", value), t::mono_medium(22.0), value_color);
-    text(ui, Pos2::new(rect.center().x, top + 32.0), Align2::CENTER_CENTER, unit, t::regular(10.0), t::TEXT_TERTIARY);
+    text(ui, Pos2::new(rect.center().x, top + 32.0), Align2::CENTER_CENTER, unit, t::regular(10.0), t::TEXT_TERTIARY());
     changed
 }
 
