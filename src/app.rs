@@ -221,12 +221,25 @@ fn flow(widths: &[f32], max_w: f32, gap: f32) -> (Vec<(f32, usize)>, usize) {
     (out, row + 1)
 }
 
-/// Поле ввода названия папки прямо в строке чипов.
+/// Поле ввода названия папки прямо в строке чипов и кнопка ✓ справа.
 fn folder_edit_field(ui: &mut Ui, r: Rect, text: &mut String, done: &mut Option<bool>, accent: Color32) {
-    let resp = text_field(ui, r, Id::new("folder_edit"), text, "Название папки", accent);
+    let field = Rect::from_min_max(r.min, pos2(r.right() - 30.0, r.bottom()));
+    let resp = text_field(ui, field, Id::new("folder_edit"), text, "Название папки", accent);
     if resp.lost_focus() {
-        let esc = ui.input(|i| i.key_pressed(egui::Key::Escape));
-        *done = Some(!esc && !text.trim().is_empty());
+        // Пустое поле при потере фокуса не закрываем: на сенсорном экране фокус уходит
+        // сам (касание, экранная клавиатура), и поле пропадало раньше, чем в него что-то ввели.
+        if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            *done = Some(false);
+        } else if !text.trim().is_empty() {
+            *done = Some(true);
+        }
+    }
+    let ok_r = Rect::from_min_size(pos2(r.right() - 26.0, r.top()), vec2(26.0, r.height()));
+    if kit::button(ui, ok_r, Id::new("folder_edit_ok"), Content::Icon { glyph: ph::CHECK, size: 14.0, fill: false }, ButtonStyle::accent(accent, t::RADIUS_CHIP), true)
+        .on_hover_text("Создать (пустое — отмена)")
+        .clicked()
+    {
+        *done = Some(!text.trim().is_empty());
     }
 }
 
@@ -381,16 +394,6 @@ fn accent_of(config: &AppConfig) -> Color32 {
 }
 
 /// Перетаскивание окна за блок: курсор grab, при зажатии grabbing.
-fn handle_window_drag(ctx: &egui::Context, resp: &Response) {
-    if resp.drag_started() {
-        ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
-    }
-    if resp.is_pointer_button_down_on() || resp.dragged() {
-        ctx.set_cursor_icon(CursorIcon::Grabbing);
-    } else if resp.hovered() {
-        ctx.set_cursor_icon(CursorIcon::Grab);
-    }
-}
 
 /// Лежит ли точка рабочего стола (в физических пикселях) на каком-нибудь мониторе.
 #[cfg(windows)]
@@ -572,6 +575,8 @@ pub struct TimerApp {
     /// Плашку «Сейчас играет» тянут мышью: её верх относительно верха виджета
     /// и где именно её схватили.
     music_drag: Option<MusicDrag>,
+    /// Окно тащат пальцем: за какую зону, где было касание и якорь виджета в начале (физические пиксели).
+    touch_drag: Option<(Id, Pos2, Pos2)>,
     /// После отпускания плашка доезжает до своего места: откуда и когда отпустили.
     music_snap: Option<(f32, Instant)>,
     /// (высота стопки, сколько стопки над виджетом, масштаб), уже отправленные окну.
@@ -707,6 +712,7 @@ impl TimerApp {
             menu_up: false,
             prev_menu_open: false,
             music_drag: None,
+            touch_drag: None,
             music_snap: None,
             applied: None,
             geometry_pending: None,
@@ -1079,6 +1085,35 @@ impl TimerApp {
                     self.toggle_notes();
                 }
             }
+        }
+    }
+
+    /// Перетаскивание окна за виджет или шапку панели. Мышью — системное (StartDrag).
+    /// Пальцем — сами, по экранным координатам: системное перетаскивание на сенсорном
+    /// экране «съедает» отпускание пальца, и после этого виджет больше не двигался.
+    fn window_drag(&mut self, ctx: &egui::Context, resp: &Response) {
+        if resp.drag_started() {
+            if ctx.input(|i| i.any_touches()) {
+                self.touch_drag = cursor_px().zip(self.anchor_px).map(|(c, a)| (resp.id, c, a));
+            } else {
+                ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
+            }
+        }
+        if let Some((_, start, anchor)) = self.touch_drag.filter(|(id, ..)| *id == resp.id) {
+            if resp.dragged() {
+                if let Some(now) = cursor_px() {
+                    self.anchor_px = Some(anchor + (now - start));
+                    // sync_geometry переставит окно к новому якорю в этом же кадре.
+                    self.applied = None;
+                }
+            } else {
+                self.touch_drag = None;
+            }
+        }
+        if resp.is_pointer_button_down_on() || resp.dragged() {
+            ctx.set_cursor_icon(CursorIcon::Grabbing);
+        } else if resp.hovered() {
+            ctx.set_cursor_icon(CursorIcon::Grab);
         }
     }
 
@@ -1821,7 +1856,7 @@ impl TimerApp {
         // Drag-зона выделяется ДО кнопок: в egui при наложении выигрывает виджет,
         // добавленный позже, поэтому кнопки забирают клик, а всё остальное тащит окно.
         let drag = ui.interact(rect, Id::new("widget_drag"), Sense::click_and_drag());
-        handle_window_drag(&ctx, &drag);
+        self.window_drag(&ctx, &drag);
 
         let cy = rect.center().y;
 
@@ -2377,7 +2412,7 @@ impl TimerApp {
         // Шапка — за неё тоже можно тащить окно.
         let head = Rect::from_min_size(pos2(left, y), vec2(w, 28.0));
         let drag = ui.interact(head, Id::new("notes_drag"), Sense::click_and_drag());
-        handle_window_drag(&ctx, &drag);
+        self.window_drag(&ctx, &drag);
         let title_r = kit::text(ui, pos2(left, head.center().y), Align2::LEFT_CENTER, "Заметки", t::medium(15.0), t::TEXT_PRIMARY());
         let open_count = self.state.notes.iter().filter(|n| !n.done).count();
         if open_count > 0 {
@@ -2506,7 +2541,7 @@ impl TimerApp {
     fn draw_folder_chips(&mut self, ui: &mut Ui, left: f32, y: f32, w: f32, accent: Color32) -> f32 {
         const H: f32 = 26.0;
         const GAP: f32 = 6.0;
-        const EDIT_W: f32 = 130.0;
+        const EDIT_W: f32 = 160.0;
         let size = 12.0;
         let count = |folder: Option<u64>| {
             self.state.notes.iter().filter(|n| !n.done && folder.is_none_or(|f| n.in_folder(f))).count()
